@@ -1,25 +1,53 @@
-import 'dart:convert';
-import 'package:doctor_doom/authentication/signupscreen.dart';
-import 'package:doctor_doom/authentication/tokenmanage.dart';
-import 'package:doctor_doom/homescreen/homescreen.dart';
+import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+final firstNameProvider = StateProvider<String>((ref) => "");
+final lastNameProvider = StateProvider<String>((ref) => "");
+final emailProvider = StateProvider<String>((ref) => "");
+final phoneNumberProvider = StateProvider<String>((ref) => "");
+final passwordProvider = StateProvider<String>((ref) => "");
 final passwordVisibilityProvider = StateProvider<bool>((ref) => true);
 
-class LoginScreen extends ConsumerWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class SignupScreen extends ConsumerWidget {
+  const SignupScreen({Key? key}) : super(key: key);
 
   bool isEmailValid(String email) {
     final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
     return regex.hasMatch(email);
   }
 
-  Future<void> login(WidgetRef ref) async {
+  bool isPasswordValid(String password) {
+    final regex = RegExp(
+        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:"\\|,<>\./?])(?=.{6,})');
+    return regex.hasMatch(password);
+  }
+
+  bool isPhoneNumberValid(String phoneNumber) {
+    return phoneNumber.length == 10 && int.tryParse(phoneNumber) != null;
+  }
+
+  Future<void> signUp(WidgetRef ref) async {
+    final firstName = ref.read(firstNameProvider);
+    final lastName = ref.read(lastNameProvider);
     final email = ref.read(emailProvider);
+    final phoneNumber = ref.read(phoneNumberProvider);
     final password = ref.read(passwordProvider);
+
+    if (firstName.isEmpty ||
+        lastName.isEmpty ||
+        email.isEmpty ||
+        phoneNumber.isEmpty ||
+        password.isEmpty) {
+      ScaffoldMessenger.of(ref.context).showSnackBar(
+        const SnackBar(content: Text("All fields are required!")),
+      );
+      return;
+    }
+
     if (!isEmailValid(email)) {
       ScaffoldMessenger.of(ref.context).showSnackBar(
         const SnackBar(content: Text("Please enter a valid email address!")),
@@ -27,10 +55,29 @@ class LoginScreen extends ConsumerWidget {
       return;
     }
 
-    const String url = "https://huddlehub-75fx.onrender.com/login/";
+    if (!isPhoneNumberValid(phoneNumber)) {
+      ScaffoldMessenger.of(ref.context).showSnackBar(
+        const SnackBar(content: Text("Phone number must be 10 digits!")),
+      );
+      return;
+    }
+
+    if (!isPasswordValid(password)) {
+      ScaffoldMessenger.of(ref.context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                "Password must be at least 6 characters and include a letter, a number, and a special character!")),
+      );
+      return;
+    }
+
+    const String url = "https://huddlehub-75fx.onrender.com/signup/";
 
     final body = {
+      "first_name": firstName,
+      "last_name": lastName,
       "email": email,
+      "phone_number": phoneNumber,
       "password": password,
     };
 
@@ -40,29 +87,19 @@ class LoginScreen extends ConsumerWidget {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
-      final data = response.body;
 
       if (response.statusCode == 200) {
-        if (data == "Please enter valid password") {
-          ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("Invalid password. Please try again.")),
-          );
-        } else if (data == "Error occured") {
-          ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("User doesn't exist. Please try again.")),
-          );
-        } else {
-          final token = data.split('=')[1];
-          await saveToken(token);
-          ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("Login Successful!")),
-          );
-
-          Navigator.pushReplacement(
-            ref.context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          SnackBar(content: Text("Signup Successful!")),
+        );
+        Navigator.push(
+          ref.context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          SnackBar(content: Text("Error: ${response.body}")),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(ref.context).showSnackBar(
@@ -106,7 +143,9 @@ class LoginScreen extends ConsumerWidget {
                     ),
                     textAlign: TextAlign.center,
                   )),
-              const Spacer(flex: 2),
+              SizedBox(
+                height: 30,
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Container(
@@ -127,7 +166,7 @@ class LoginScreen extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'LOGIN',
+                        'SIGNUP',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 28,
@@ -138,12 +177,42 @@ class LoginScreen extends ConsumerWidget {
                       const SizedBox(height: 20),
                       TextField(
                         decoration: const InputDecoration(
+                          labelText: "First Name",
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.name,
+                        onChanged: (value) =>
+                            ref.read(firstNameProvider.notifier).state = value,
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        decoration: const InputDecoration(
+                          labelText: "Last Name",
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.name,
+                        onChanged: (value) =>
+                            ref.read(lastNameProvider.notifier).state = value,
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        decoration: const InputDecoration(
                           labelText: "Email",
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         onChanged: (value) =>
                             ref.read(emailProvider.notifier).state = value,
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        decoration: const InputDecoration(
+                          labelText: "Phone No.",
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) => ref
+                            .read(phoneNumberProvider.notifier)
+                            .state = value,
                       ),
                       const SizedBox(height: 20),
                       TextField(
@@ -169,7 +238,7 @@ class LoginScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: () => login(ref),
+                        onPressed: () => signUp(ref),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color.fromRGBO(202, 239, 184, 1),
                           shape: RoundedRectangleBorder(
@@ -178,40 +247,17 @@ class LoginScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 14.0),
                         ),
                         child: const Text(
-                          "Login",
+                          "Create Account",
                           style: TextStyle(
                               fontSize: 16,
                               color: Color.fromARGB(255, 0, 0, 0)),
                         ),
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("New user? "),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => SignupScreen()),
-                              );
-                            },
-                            child: const Text(
-                              "Register",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
               ),
-              const Spacer(flex: 3),
             ],
           ),
         ],
