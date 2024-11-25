@@ -13,7 +13,7 @@ final passwordProvider = StateProvider<String>((ref) => "");
 final passwordVisibilityProvider = StateProvider<bool>((ref) => true);
 
 class SignupScreen extends ConsumerWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   bool isEmailValid(String email) {
     final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
@@ -90,7 +90,7 @@ class SignupScreen extends ConsumerWidget {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(ref.context).showSnackBar(
-          SnackBar(content: Text("Signup Successful!")),
+          const SnackBar(content: Text("Signup Successful!")),
         );
         Navigator.push(
           ref.context,
@@ -110,7 +110,7 @@ class SignupScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _obscurePassword = ref.watch(passwordVisibilityProvider);
+    final obscurePassword = ref.watch(passwordVisibilityProvider);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
@@ -143,7 +143,7 @@ class SignupScreen extends ConsumerWidget {
                     ),
                     textAlign: TextAlign.center,
                   )),
-              SizedBox(
+              const SizedBox(
                 height: 30,
               ),
               Padding(
@@ -152,7 +152,7 @@ class SignupScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(200, 255, 255, 255),
                     borderRadius: BorderRadius.circular(16.0),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black26,
                         blurRadius: 10,
@@ -218,21 +218,21 @@ class SignupScreen extends ConsumerWidget {
                       TextField(
                         decoration: InputDecoration(
                           labelText: "Password",
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword
+                              obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
                             ),
                             onPressed: () {
                               ref
                                   .read(passwordVisibilityProvider.notifier)
-                                  .state = !_obscurePassword;
+                                  .state = !obscurePassword;
                             },
                           ),
                         ),
-                        obscureText: _obscurePassword,
+                        obscureText: obscurePassword,
                         onChanged: (value) =>
                             ref.read(passwordProvider.notifier).state = value,
                       ),
@@ -240,7 +240,7 @@ class SignupScreen extends ConsumerWidget {
                       ElevatedButton(
                         onPressed: () => signUp(ref),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(202, 239, 184, 1),
+                          backgroundColor: const Color.fromRGBO(202, 239, 184, 1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
