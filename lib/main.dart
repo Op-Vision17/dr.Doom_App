@@ -6,16 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  final bool isLoggedIn = await isUserLoggedIn();
-
-  runApp(ProviderScope(child: MyApp(isLoggedIn: isLoggedIn)));
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-  final bool isLoggedIn;
-
-  const MyApp({super.key, required this.isLoggedIn});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +21,22 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
+      home: FutureBuilder<bool>(
+        future: isUserLoggedIn(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text("Error checking login status"));
+          }
+
+          final bool isLoggedIn = snapshot.data ?? false;
+
+          return isLoggedIn ? const HomeScreen() : const LoginScreen();
+        },
+      ),
     );
   }
 }
