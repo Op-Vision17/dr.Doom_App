@@ -22,7 +22,7 @@ class SignupScreen extends ConsumerWidget {
 
   bool isPasswordValid(String password) {
     final regex = RegExp(
-        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:"\\|,<>\./?])(?=.{6,})');
+        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:"\\|,<>\./?])(?=.{8,})');
     return regex.hasMatch(password);
   }
 
@@ -66,12 +66,12 @@ class SignupScreen extends ConsumerWidget {
       ScaffoldMessenger.of(ref.context).showSnackBar(
         const SnackBar(
             content: Text(
-                "Password must be at least 6 characters and include a letter, a number, and a special character!")),
+                "Password must be at least 8 characters and include a letter, a number, and a special character!")),
       );
       return;
     }
 
-    const String url = "https://huddlehub-75fx.onrender.com/signup/";
+    const String url = "https://login-signup-docdoom.onrender.com/register/";
 
     final body = {
       "first_name": firstName,
@@ -88,17 +88,20 @@ class SignupScreen extends ConsumerWidget {
         body: jsonEncode(body),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final message = jsonDecode(response.body)["message"];
         ScaffoldMessenger.of(ref.context).showSnackBar(
-          SnackBar(content: Text("Signup Successful!")),
+          SnackBar(content: Text(message)),
         );
         Navigator.push(
           ref.context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       } else {
+        final error = jsonDecode(response.body);
+        final errorMessage = error.values.map((e) => e.join(" ")).join("\n");
         ScaffoldMessenger.of(ref.context).showSnackBar(
-          SnackBar(content: Text("Error: ${response.body}")),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
