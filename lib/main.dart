@@ -1,6 +1,6 @@
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
-import 'package:doctor_doom/homescreen/homescreen.dart';
+import 'package:doctor_doom/appui/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
