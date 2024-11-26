@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 final passwordVisibilityProvider = StateProvider<bool>((ref) => true);
 
 class LoginScreen extends ConsumerWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   bool isEmailValid(String email) {
     final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
@@ -45,17 +45,17 @@ class LoginScreen extends ConsumerWidget {
       if (response.statusCode == 200) {
         if (data == "Please enter valid password") {
           ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("Invalid password. Please try again.")),
+            const SnackBar(content: Text("Invalid password. Please try again.")),
           );
         } else if (data == "Error occured") {
           ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("User doesn't exist. Please try again.")),
+            const SnackBar(content: Text("User doesn't exist. Please try again.")),
           );
         } else {
           final token = data.split('=')[1];
           await saveToken(token);
           ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("Login Successful!")),
+            const SnackBar(content: Text("Login Successful!")),
           );
 
           Navigator.pushReplacement(
@@ -73,7 +73,7 @@ class LoginScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _obscurePassword = ref.watch(passwordVisibilityProvider);
+    final obscurePassword = ref.watch(passwordVisibilityProvider);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
@@ -113,7 +113,7 @@ class LoginScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(200, 255, 255, 255),
                     borderRadius: BorderRadius.circular(16.0),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black26,
                         blurRadius: 10,
@@ -149,21 +149,21 @@ class LoginScreen extends ConsumerWidget {
                       TextField(
                         decoration: InputDecoration(
                           labelText: "Password",
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword
+                              obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
                             ),
                             onPressed: () {
                               ref
                                   .read(passwordVisibilityProvider.notifier)
-                                  .state = !_obscurePassword;
+                                  .state = !obscurePassword;
                             },
                           ),
                         ),
-                        obscureText: _obscurePassword,
+                        obscureText: obscurePassword,
                         onChanged: (value) =>
                             ref.read(passwordProvider.notifier).state = value,
                       ),
@@ -171,7 +171,7 @@ class LoginScreen extends ConsumerWidget {
                       ElevatedButton(
                         onPressed: () => login(ref),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(202, 239, 184, 1),
+                          backgroundColor: const Color.fromRGBO(202, 239, 184, 1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
@@ -194,7 +194,7 @@ class LoginScreen extends ConsumerWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => SignupScreen()),
+                                    builder: (context) => const SignupScreen()),
                               );
                             },
                             child: const Text(

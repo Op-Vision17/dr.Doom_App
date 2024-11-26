@@ -1,10 +1,11 @@
+import 'package:doctor_doom/appui/profile.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   Future<void> logout(BuildContext context) async {
     await clearToken();
@@ -62,7 +63,14 @@ class HomeScreen extends StatelessWidget {
                               IconButton(
                                 icon: const Icon(Icons.person_2_rounded,
                                     color: Colors.white),
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>  ProfilePage(),
+                                    ),
+                                  );
+                                },
                               ),
                               IconButton(
                                 icon: const Icon(Icons.logout_rounded,
@@ -131,15 +139,15 @@ class ActionButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const ActionButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       width: double.infinity,
       child: ElevatedButton(
         onPressed: onPressed,
