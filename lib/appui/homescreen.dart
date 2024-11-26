@@ -1,4 +1,6 @@
+import 'package:doctor_doom/appui/joinmeeting.dart';
 import 'package:doctor_doom/appui/profile.dart';
+import 'package:doctor_doom/appui/startmeeting.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:flutter/material.dart';
@@ -115,12 +117,24 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     ActionButton(
                       label: "Start Meeting",
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Startmeetingscreen()),
+                        );
+                      },
                     ),
                     const SizedBox(height: 20),
                     ActionButton(
                       label: "Join Meeting",
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => JoinMeetingScreen()),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -156,10 +170,16 @@ class ActionButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(22),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          elevation: 10,
+          shadowColor: Colors.black.withOpacity(0.4),
         ),
         child: Text(
           label,
-          style: const TextStyle(color: Colors.black),
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
           textAlign: TextAlign.center,
         ),
       ),
