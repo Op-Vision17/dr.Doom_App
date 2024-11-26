@@ -17,6 +17,10 @@ final isHandRaisedProvider = StateProvider<bool>((ref) {
   return false;
 });
 
+final requestToJoinProvider = StateProvider<String?>((ref) {
+  return null; // Initially, no request
+});
+
 class VideoCallScreen extends ConsumerWidget {
   const VideoCallScreen({super.key});
 
@@ -26,12 +30,15 @@ class VideoCallScreen extends ConsumerWidget {
     final isMicOn = ref.watch(isMicOnProvider);
     final isVideoOn = ref.watch(isVideoOnProvider);
     final isHandRaised = ref.watch(isHandRaisedProvider);
+    final requestToJoin =
+        ref.watch(requestToJoinProvider); // Get current request state
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
+            // Meeting Information Container
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
@@ -39,93 +46,114 @@ class VideoCallScreen extends ConsumerWidget {
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Project Reporting - Week 1",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Anshika's Meeting Room",
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                    ],
+                  Text(
+                    "We can show meeting room code here", // Room code or meeting info
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(30),
+
+            // Conditionally show AnimatedContainer if there's a request to join
+            if (requestToJoin != null) ...[
+              AnimatedContainer(
+                duration: Duration(seconds: 1),
+                curve: Curves.easeInOut,
+                margin: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          requestToJoin!, // Display the name of the user requesting
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Wants to join the meeting",
+                          style:
+                              TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              // Remove the request
+                              ref.read(requestToJoinProvider.notifier).state =
+                                  null;
+                            },
+                            icon: Icon(Icons.close, color: Colors.white),
+                            iconSize: 28,
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              // Add the user to the participants list
+                              ref.read(participantsProvider.notifier).update(
+                                  (state) => [...state, requestToJoin!]);
+                              ref.read(requestToJoinProvider.notifier).state =
+                                  null; // Clear the request
+                            },
+                            icon: Icon(Icons.check, color: Colors.white),
+                            iconSize: 28,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Anshika",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Wants to join the meeting",
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          iconSize: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.black,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            ref
-                                .read(participantsProvider.notifier)
-                                .update((state) => [...state, "new"]);
-                          },
-                          icon: const Icon(Icons.check, color: Colors.white),
-                          iconSize: 28,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            ],
+
+            // Add a button to simulate a request to join
+            ElevatedButton(
+              onPressed: () {
+                // Simulate a request from a user named "Anshika"
+                ref.read(requestToJoinProvider.notifier).state = "Anshika";
+
+                // Simulate removing the request after 10 seconds (for demonstration)
+                Future.delayed(Duration(seconds: 10), () {
+                  // If the owner hasn't approved the request, it will disappear
+                  ref.read(requestToJoinProvider.notifier).state = null;
+                });
+              },
+              child: Text('Simulate Request'),
             ),
+
+            // Other content
             Expanded(
               child: Column(
                 children: [
+                  // Video or Participant Content
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -174,7 +202,8 @@ class VideoCallScreen extends ConsumerWidget {
                               child: Container(
                                 height: 50,
                                 width: 325,
-                                margin: const EdgeInsets.symmetric(horizontal: 10),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 10),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
                                 ),
@@ -184,23 +213,8 @@ class VideoCallScreen extends ConsumerWidget {
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.voice_chat),
-                                    const SizedBox(
-                                      width: 12,
-                                    ),
-                                    Column(
-                                      children: [
-                                        const SizedBox(height: 3),
-                                        Center(
-                                          child: Text(
-                                            ".......................",
-                                            style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey[600]),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    Icon(Icons.voice_chat),
+                                    SizedBox(width: 12),
                                   ],
                                 ),
                               ),
@@ -210,6 +224,7 @@ class VideoCallScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  // Participant list
                   Container(
                     height: 100,
                     margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -276,6 +291,7 @@ class VideoCallScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            // Bottom controls (mic, video, hand raise, etc.)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),

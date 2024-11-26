@@ -1,6 +1,6 @@
-import 'package:doctor_doom/appui/splashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:doctor_doom/appui/splashscreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
             seedColor: const Color.fromARGB(255, 160, 247, 143)),
         useMaterial3: true,
       ),
-      home: const Splashscreen(),
+      home: Splashscreen(),
     );
   }
 }
