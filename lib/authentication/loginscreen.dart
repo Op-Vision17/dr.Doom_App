@@ -14,7 +14,7 @@ final passwordProvider = StateProvider<String>((ref) => '');
 final loadingProvider = StateProvider<bool>((ref) => false);
 
 class LoginScreen extends ConsumerWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   bool isEmailValid(String email) {
     final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
@@ -91,7 +91,6 @@ class LoginScreen extends ConsumerWidget {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Background Image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -227,7 +226,7 @@ class LoginScreen extends ConsumerWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => SignupScreen()),
+                                    builder: (context) => const SignupScreen()),
                               );
                             },
                             child: const Text(
@@ -247,7 +246,6 @@ class LoginScreen extends ConsumerWidget {
               const Spacer(flex: 3),
             ],
           ),
-
           if (isLoading)
             const Center(
               child: CircularProgressIndicator(),
