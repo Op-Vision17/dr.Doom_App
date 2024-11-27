@@ -56,11 +56,11 @@ class LoginScreen extends ConsumerWidget {
         final token = data['token'];
         final user = data['user'];
 
-        await saveToken(token); // Save the token first
+        await saveToken(token);
        
-       // Save user data securely
+       
         final userStorage = UserStorage();
-        await userStorage.saveUserData(user, token); // Save user data
+        await userStorage.saveUserData(user, token); 
 
         ScaffoldMessenger.of(ref.context).showSnackBar(
           const SnackBar(content: Text("Login Successful!")),

@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class UserStorage {
   final _storage = FlutterSecureStorage();
 
-  // Save user data securely
+  
   Future<void> saveUserData(Map<String, dynamic> user, String token) async {
     await _storage.write(key: 'token', value: token);
     await _storage.write(key: 'first_name', value: user['first_name']);
@@ -12,7 +12,7 @@ class UserStorage {
     await _storage.write(key: 'phone_number', value: user['phone_number']);
   }
 
-  // Get saved user data
+
   Future<Map<String, String>> getUserData() async {
     final firstName = await _storage.read(key: 'first_name') ?? '';
     final lastName = await _storage.read(key: 'last_name') ?? '';
