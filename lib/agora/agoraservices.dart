@@ -1,159 +1,132 @@
-// import 'package:agora_rtc_engine/agora_rtc_engine.dart'; // Correct import
-// import 'dart:convert';
-// import 'package:http/http.dart' as http;
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:doctor_doom/agora/apiwork.dart';
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-// RtcEngine? _engine; // Declare the Agora engine as nullable
+class AgoraService {
+  static late final RtcEngine _engine;
+  static const String appId =
+      "<-- Insert app Id -->"; // Replace with your Agora App ID
+  static int? _remoteUid;
+  static String roomName = ""; // To store the current room name
 
-// // Fill in the app ID obtained from the Agora console
-// const appId = "2f3131394cc6417b91aa93cfde567a37";
-// // Fill in the temporary token generated from Agora Console
-// const token = "<-- Insert token -->";
-// // Fill in the channel name you used to generate the token
-// const channel = "<-- Insert channel name -->";
+  // Method to check permissions for camera and microphone
+  static Future<bool> checkPermissions() async {
+    final cameraStatus = await Permission.camera.request();
+    final micStatus = await Permission.microphone.request();
+    return cameraStatus.isGranted && micStatus.isGranted;
+  }
 
-// /// Initialize the Agora engine
-// Future<void> initializeAgoraEngine(String appId) async {
-//   _engine = createAgoraRtcEngine(); // Create the engine instance
+  // Method to initialize the Agora RTC engine
+  static Future<void> initializeAgora() async {
+    // Create an instance of RtcEngine using createAgoraRtcEngine
+    _engine = await createAgoraRtcEngine();
 
-//   await _engine!.initialize(
-//     RtcEngineContext(appId: appId),
-//   );
+    // Initialize RtcEngine and set the channel profile to communication
+    await _engine.initialize(
+      RtcEngineContext(
+        appId: appId,
+        channelProfile: ChannelProfileType.channelProfileCommunication,
+      ),
+    );
 
-//   print('Agora engine initialized.');
-// }
+    // Enable the video module
+    await _engine.enableVideo();
 
-// /// Join an Agora meeting
-// Future<void> joinAgoraMeeting(String token, String roomName, int uid) async {
-//   if (_engine == null) {
-//     print('Agora engine is not initialized.');
-//     return;
-//   }
+    // Start the local video preview
+    await _engine.startPreview();
 
-//   await _engine!
-//       .setChannelProfile(ChannelProfileType.channelProfileCommunication);
+    // Register event handler for various events
+    _engine.registerEventHandler(
+      RtcEngineEventHandler(
+        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+          print("Local user ${connection.localUid} joined channel");
+        },
+        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+          print("Remote user $remoteUid joined channel");
+          _remoteUid = remoteUid;
+        },
+        onUserOffline: (RtcConnection connection, int remoteUid,
+            UserOfflineReasonType reason) {
+          print("Remote user $remoteUid left channel");
+          _remoteUid = null;
+        },
+        // Corrected onLeaveChannel handler with two parameters
+        onLeaveChannel: (RtcConnection connection, RtcStats stats) {
+          print("Left channel with stats: $stats");
+        },
+      ),
+    );
+  }
 
-//   await _engine!.joinChannel(
-//     token: token,
-//     channelId: roomName,
-//     uid: uid,
-//     options: const ChannelMediaOptions(),
-//   );
+  // Method to join the Agora channel with dynamic token and room name
+  static Future<void> joinChannel(String roomName, String username) async {
+    // First, create or fetch the member for the room
+    await createMember(username, 0, roomName);
 
-//   print('Joined meeting successfully in channel: $roomName');
-// }
+    // Generate the token from the API
+    String? token = await fetchAgoraToken(roomName);
 
-// /// Leave an Agora meeting
-// Future<void> leaveAgoraMeeting(String name, int uid, String roomName) async {
-//   if (_engine == null) {
-//     print('Agora engine is not initialized.');
-//     return;
-//   }
+    if (token == null) {
+      print("Error: Token generation failed");
+      return;
+    }
 
-//   await _engine!.leaveChannel();
-//   print('Left Agora channel.');
+    // Join the channel with the token
+    await _engine.joinChannel(
+      token: token, // Passing token as named parameter
+      channelId: roomName, // Pass roomName as the channelId
+      uid: 0, // 0 means the engine will automatically assign a user ID
+      options: ChannelMediaOptions(
+        autoSubscribeAudio: true,
+        autoSubscribeVideo: true,
+        publishCameraTrack: true,
+        publishMicrophoneTrack: true,
+        clientRoleType: ClientRoleType.clientRoleBroadcaster,
+      ),
+    );
+  }
 
-//   // Call the API to delete the member
-//   final result = await leaveMeeting(name, uid, roomName);
+  // Method to leave the Agora channel and remove the member from the room
+  static Future<void> leaveChannel(String roomName, String username) async {
+    // Call API to delete the member from the server
+    await leaveMeeting(username, 0, roomName);
 
-//   if (result != null && result == "Member deleted") {
-//     print('Member deleted from the server: $name');
-//   } else {
-//     print('Failed to delete member from the server.');
-//   }
-// }
+    // Leave the Agora channel
+    await _engine.leaveChannel();
+  }
 
-// /// Call the API to delete a member from the server
-// Future<String?> leaveMeeting(String name, int uid, String roomName) async {
-//   const String apiUrl = 'https://agora-8ojc.onrender.com/delete_member/';
+  // Method to mute/unmute local audio stream
+  static Future<void> muteLocalAudio(bool mute) async {
+    await _engine.muteLocalAudioStream(mute);
+  }
 
-//   try {
-//     final response = await http.post(
-//       Uri.parse(apiUrl),
-//       headers: {'Content-Type': 'application/json'},
-//       body: jsonEncode({
-//         'name': name,
-//         'UID': uid,
-//         'room_name': roomName,
-//       }),
-//     );
+  // Method to mute/unmute local video stream
+  static Future<void> muteLocalVideo(bool mute) async {
+    await _engine.muteLocalVideoStream(mute);
+  }
 
-//     if (response.statusCode == 200) {
-//       return response.body; // Return the response body as a string
-//     } else {
-//       print('Error: ${response.body}');
-//       return null;
-//     }
-//   } catch (e) {
-//     print('Failed to call delete_member API: $e');
-//     return null;
-//   }
-// }
+  // Method to display the remote video stream
+  static Widget remoteVideo() {
+    if (_remoteUid != null) {
+      return AgoraVideoView(
+        controller: VideoViewController.remote(
+          rtcEngine: _engine,
+          canvas: VideoCanvas(uid: _remoteUid),
+          connection: RtcConnection(channelId: roomName),
+        ),
+      );
+    } else {
+      return const Text(
+        'Please wait for remote user to join',
+        textAlign: TextAlign.center,
+      );
+    }
+  }
 
-// /// Fetch an Agora token from the server
-// Future<String?> fetchAgoraToken(String roomName) async {
-//   const String apiUrl = 'https://agora-8ojc.onrender.com/get_token/';
-
-//   try {
-//     final response = await http.get(
-//       Uri.parse('$apiUrl?channel=$roomName'),
-//     );
-
-//     if (response.statusCode == 200) {
-//       final data = jsonDecode(response.body);
-//       return data['token']; // Extract and return the token
-//     } else {
-//       print('Error: ${response.body}');
-//       return null;
-//     }
-//   } catch (e) {
-//     print('Failed to fetch Agora token: $e');
-//     return null;
-//   }
-// }
-
-// /// Create a member in the Agora channel
-// Future<bool> createMember(String name, int uid, String roomName) async {
-//   const String apiUrl = 'https://agora-8ojc.onrender.com/create_member/';
-
-//   try {
-//     final response = await http.post(
-//       Uri.parse(apiUrl),
-//       headers: {'Content-Type': 'application/json'},
-//       body: jsonEncode({
-//         'name': name,
-//         'UID': uid,
-//         'room_name': roomName,
-//       }),
-//     );
-
-//     if (response.statusCode == 200) {
-//       print('Member created successfully: ${response.body}');
-//       return true;
-//     } else {
-//       print('Error: ${response.body}');
-//       return false;
-//     }
-//   } catch (e) {
-//     print('Failed to create member: $e');
-//     return false;
-//   }
-// }
-
-// Future<String?> fetchMemberDetails(String uid, String roomName) async {
-//   final url = Uri.parse(
-//       'https://agora-8ojc.onrender.com/get_member/?UID=$uid&room_name=$roomName');
-
-//   try {
-//     final response = await http.get(url);
-//     if (response.statusCode == 200) {
-//       final data = jsonDecode(response.body);
-//       return data['name']; // Extracting the 'name' field from the response
-//     } else {
-//       print('Failed to load member details');
-//       return null;
-//     }
-//   } catch (e) {
-//     print('Error: $e');
-//     return null;
-//   }
-// }
+  // Dispose method to clean up when leaving the screen or app
+  static Future<void> dispose() async {
+    await _engine.leaveChannel(); // Leave the channel
+    await _engine.release(); // Release resources
+  }
+}

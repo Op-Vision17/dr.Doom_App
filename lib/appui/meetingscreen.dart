@@ -1,148 +1,147 @@
-// import 'dart:async';
-// import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-// import 'package:flutter/material.dart';
-// import 'package:permission_handler/permission_handler.dart';
-// import 'package:http/http.dart' as http;
+import 'package:doctor_doom/agora/agoraservices.dart';
+import 'package:doctor_doom/agora/apiwork.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// const String appId = "<-- Insert App ID -->";
-// const String channel = "<-- Insert Channel Name -->";
+// Providers to manage room name, user name, mute status, camera status, meeting status, token, and meeting uid
+final roomNameProvider = StateProvider<String>((ref) => '');
+final userNameProvider = StateProvider<String>((ref) => '');
+final muteProvider = StateProvider<bool>((ref) => false); // Mute/unmute audio
+final cameraProvider = StateProvider<bool>((ref) => false); // Camera on/off
+final meetingJoinedProvider =
+    StateProvider<bool>((ref) => false); // Meeting joined status
+final tokenProvider = StateProvider<String>((ref) => ''); // Store token
+final meetingUidProvider =
+    StateProvider<int?>((ref) => null); // Store meeting UID
 
-// // Example for getting a token from your backend
-// Future<String> fetchToken() async {
-//   final response = await http
-//       .get(Uri.parse('https://yourbackend.com/getToken?channel=$channel'));
-//   if (response.statusCode == 200) {
-//     return response.body; // Assuming the token is returned as a plain string
-//   } else {
-//     throw Exception('Failed to fetch token');
-//   }
-// }
+class MeetingScreen extends ConsumerStatefulWidget {
+  final String roomName;
+  final String userName;
 
-// class VideoCallScreen extends StatefulWidget {
-//   @override
-//   _VideoCallScreenState createState() => _VideoCallScreenState();
-// }
+  const MeetingScreen({
+    required this.roomName,
+    required this.userName,
+    Key? key,
+  }) : super(key: key);
 
-// class _VideoCallScreenState extends State<VideoCallScreen> {
-//   late RtcEngine _engine;
-//   bool _localUserJoined = false;
-//   List<int> _remoteUids = []; // List to track remote users' UIDs
+  @override
+  _MeetingScreenState createState() => _MeetingScreenState();
+}
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _initAgora();
-//   }
+class _MeetingScreenState extends ConsumerState<MeetingScreen> {
+  bool _isMuted = false;
+  bool _isCameraOff = false;
 
-//   Future<void> _initAgora() async {
-//     // Request permissions
-//     await [Permission.microphone, Permission.camera].request();
+  @override
+  void initState() {
+    super.initState();
+    // Initialize roomName and userName in providers
+    ref.read(roomNameProvider.notifier).state = widget.roomName;
+    ref.read(userNameProvider.notifier).state = widget.userName;
 
-//     // Fetch token from the backend
-//     String token = await fetchToken();
+    // Initialize the meeting on screen load
+    _initializeMeeting();
+  }
 
-//     // Create Agora engine instance
-//     _engine = await createAgoraRtcEngine();
-//     await _engine.initialize(RtcEngineContext(appId: appId));
+  Future<void> _initializeMeeting() async {
+    // Check for camera and microphone permissions
+    if (await AgoraService.checkPermissions()) {
+      final token = await fetchAgoraToken(widget.roomName);
+      if (token == null || token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to get Agora token')),
+        );
+        return;
+      }
 
-//     // Add event handlers
-//     _engine.registerEventHandler(RtcEngineEventHandler(
-//       onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-//         setState(() {
-//           _localUserJoined = true;
-//         });
-//       },
-//       onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-//         setState(() {
-//           _remoteUids.add(remoteUid); // Add remote user to the list
-//         });
-//       },
-//       onUserOffline: (RtcConnection connection, int remoteUid,
-//           UserOfflineReasonType reason) {
-//         setState(() {
-//           _remoteUids
-//               .remove(remoteUid); // Remove user from the list when they leave
-//         });
-//       },
-//     ));
+      // Set the token in the Riverpod provider
+      ref.read(tokenProvider.notifier).state = token;
 
-//     // Enable video
-//     await _engine.enableVideo();
-//     await _engine.startPreview();
+      // Initialize Agora service and join the channel
+      await AgoraService.initializeAgora();
+      await AgoraService.joinChannel(widget.roomName, widget.userName);
 
-//     // Join the channel
-//     await _engine.joinChannel(
-//       token: token,
-//       channelId: channel,
-//       options: ChannelMediaOptions(
-//         autoSubscribeVideo: true,
-//         autoSubscribeAudio: true,
-//         publishCameraTrack: true,
-//         publishMicrophoneTrack: true,
-//         clientRoleType: ClientRoleType
-//             .clientRoleBroadcaster, // Allow all users to broadcast
-//       ),
-//       uid: 0, // Automatically assign UID
-//     );
-//   }
+      // Set meeting joined status in Riverpod
+      ref.read(meetingJoinedProvider.notifier).state = true;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Camera or microphone permissions denied')),
+      );
+    }
+  }
 
-//   @override
-//   void dispose() {
-//     super.dispose();
-//     _dispose();
-//   }
+  @override
+  void dispose() {
+    super.dispose();
+    // Leave the Agora channel when the screen is disposed
+    AgoraService.leaveChannel(widget.roomName, widget.userName);
+  }
 
-//   Future<void> _dispose() async {
-//     await _engine.leaveChannel();
-//     await _engine.release();
-//   }
+  @override
+  Widget build(BuildContext context) {
+    final token = ref.watch(tokenProvider);
+    final muteStatus = ref.watch(muteProvider);
+    final cameraStatus = ref.watch(cameraProvider);
+    final meetingJoined = ref.watch(meetingJoinedProvider);
+    final meetingUid = ref.watch(meetingUidProvider); // Access the meeting UID
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Agora Video Call')),
-//       body: Stack(
-//         children: [
-//           // List to display remote videos
-//           Positioned.fill(
-//             child: _remoteUids.isEmpty
-//                 ? Center(child: Text('Waiting for remote users...'))
-//                 : GridView.builder(
-//                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//                       crossAxisCount:
-//                           2, // Adjust the number of columns for remote videos
-//                     ),
-//                     itemCount: _remoteUids.length,
-//                     itemBuilder: (context, index) {
-//                       return AgoraVideoView(
-//                         controller: VideoViewController.remote(
-//                           rtcEngine: _engine,
-//                           canvas: VideoCanvas(uid: _remoteUids[index]),
-//                           connection: RtcConnection(channelId: channel),
-//                         ),
-//                       );
-//                     },
-//                   ),
-//           ),
-//           Align(
-//             alignment: Alignment.topLeft,
-//             child: SizedBox(
-//               width: 100,
-//               height: 150,
-//               child: Center(
-//                 child: _localUserJoined
-//                     ? AgoraVideoView(
-//                         controller: VideoViewController(
-//                           rtcEngine: _engine,
-//                           canvas: VideoCanvas(uid: 0),
-//                         ),
-//                       )
-//                     : CircularProgressIndicator(),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+    return Scaffold(
+      appBar: AppBar(title: Text('Meeting: ${widget.roomName}')),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              color: Colors.black, // Placeholder for video stream
+              child: meetingJoined
+                  ? AgoraService.remoteVideo() // Display remote video view
+                  : Center(
+                      child:
+                          CircularProgressIndicator()), // Show loading while joining
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Mute/Unmute Audio
+              IconButton(
+                icon: Icon(
+                  muteStatus ? Icons.mic_off : Icons.mic,
+                  color: muteStatus ? Colors.red : Colors.white,
+                ),
+                onPressed: () async {
+                  ref.read(muteProvider.notifier).state = !muteStatus;
+                  await AgoraService.muteLocalAudio(
+                      !muteStatus); // Update mute status
+                },
+              ),
+              // Turn Camera On/Off
+              IconButton(
+                icon: Icon(
+                  cameraStatus ? Icons.videocam_off : Icons.videocam,
+                  color: cameraStatus ? Colors.red : Colors.white,
+                ),
+                onPressed: () async {
+                  ref.read(cameraProvider.notifier).state = !cameraStatus;
+                  if (cameraStatus) {
+                    await AgoraService.muteLocalVideo(true); // Disable video
+                  } else {
+                    await AgoraService.muteLocalVideo(false); // Enable video
+                  }
+                },
+              ),
+              // Leave Meeting
+              IconButton(
+                icon: Icon(Icons.exit_to_app, color: Colors.red),
+                onPressed: () async {
+                  await AgoraService.leaveChannel(
+                      widget.roomName, widget.userName);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

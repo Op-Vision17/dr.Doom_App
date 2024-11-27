@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final roomNameProvider = StateProvider<String>((ref) => '');
 final userNameProvider = StateProvider<String>((ref) => '');
 
-class JoinMeetingScreen extends ConsumerWidget {
+class Startmeeting extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final roomName = ref.watch(roomNameProvider);
@@ -63,7 +63,7 @@ class JoinMeetingScreen extends ConsumerWidget {
                             )),
                   );
                 },
-                child: Text('Join'),
+                child: Text('Start'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal,
                   foregroundColor: Colors.white,

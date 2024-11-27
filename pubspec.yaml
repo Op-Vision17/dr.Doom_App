@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  agora_rtc_engine: ^6.3.2
   animated_splash_screen: ^1.3.0
   cupertino_icons: ^1.0.8
   flutter:
@@ -39,12 +40,10 @@ dependencies:
   page_transition: ^2.1.0
   permission_handler: ^11.3.1
   shared_preferences: ^2.3.3
-  # agora_rtc_engine: ^6.3.2
-  # agora_uikit: ^1.3.10
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.1
-  flutter_lints: 3.0.0
+  flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter
 
