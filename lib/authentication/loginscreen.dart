@@ -3,6 +3,7 @@ import 'package:doctor_doom/authentication/resetpass.dart';
 import 'package:doctor_doom/authentication/signupscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:doctor_doom/appui/homescreen.dart';
+import 'package:doctor_doom/services/user_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -53,7 +54,13 @@ class LoginScreen extends ConsumerWidget {
 
       if (response.statusCode == 200) {
         final token = data['token'];
-        await saveToken(token);
+        final user = data['user'];
+
+        await saveToken(token); // Save the token first
+       
+       // Save user data securely
+        final userStorage = UserStorage();
+        await userStorage.saveUserData(user, token); // Save user data
 
         ScaffoldMessenger.of(ref.context).showSnackBar(
           const SnackBar(content: Text("Login Successful!")),
