@@ -200,21 +200,25 @@ class LoginScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: () => login(ref),
+                        onPressed: isLoading ? null : () => login(ref),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromRGBO(202, 239, 184, 1),
+                          backgroundColor: Color.fromRGBO(202, 239, 184, 1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 14.0),
                         ),
-                        child: const Text(
-                          "Login",
-                          style: TextStyle(
-                              fontSize: 16,
-                              color: Color.fromARGB(255, 0, 0, 0)),
-                        ),
+                        child: isLoading
+                            ? const CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              )
+                            : const Text(
+                                "Login",
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -246,10 +250,6 @@ class LoginScreen extends ConsumerWidget {
               const Spacer(flex: 3),
             ],
           ),
-          if (isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
         ],
       ),
     );

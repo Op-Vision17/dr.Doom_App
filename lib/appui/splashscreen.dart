@@ -28,7 +28,7 @@ class Splashscreen extends StatelessWidget {
                 ),
               ),
               Image.asset(
-                'assets/logo.png',
+                'assets/logo2.png',
                 fit: BoxFit.contain,
                 height: constraints.maxHeight * 0.3,
               ),

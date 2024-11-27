@@ -260,18 +260,34 @@ class SignupScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 14.0),
                         ),
                         child: isLoading
-                            ? const CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
                               )
                             : const Text(
                                 "Create Account",
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    color: Color.fromARGB(255, 0, 0, 0)),
+                                style: TextStyle(fontSize: 18),
                               ),
                       ),
                       const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Already have an account?"),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const LoginScreen()),
+                              );
+                            },
+                            child: const Text("Login here"),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
