@@ -9,7 +9,7 @@ final meetingIdControllerProvider = Provider((ref) => TextEditingController());
 final isMicOnProvider = StateProvider<bool>((ref) => true);
 final isVideoOnProvider = StateProvider<bool>((ref) => true);
 
-class UniqueJoinMeetingPage extends ConsumerWidget {
+class Createmeeting extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Access providers
@@ -17,7 +17,7 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
     final isMicOn = ref.watch(isMicOnProvider);
     final isVideoOn = ref.watch(isVideoOnProvider);
 
-    void joinMeeting() {
+    void createMeeting() {
       final meetingId = meetingIdController.text.trim();
       if (meetingId.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -59,7 +59,7 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
               children: [
                 // Title
                 Text(
-                  "Join Meeting",
+                  "Create Meeting",
                   style: GoogleFonts.kablammo(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
@@ -83,7 +83,26 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.2),
-                    hintText: 'Enter Meeting Room no.',
+                    hintText: 'Enter username',
+                    hintStyle: const TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  keyboardType: TextInputType.text,
+                  textInputAction: TextInputAction.done,
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                TextField(
+                  controller: meetingIdController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.2),
+                    hintText: 'Create Room no.',
                     hintStyle: const TextStyle(color: Colors.white70),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),

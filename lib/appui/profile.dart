@@ -23,7 +23,6 @@ final profileProvider = StateProvider<Profile>((ref) {
   );
 });
 
-
 class ProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
