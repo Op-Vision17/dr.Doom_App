@@ -11,9 +11,10 @@ final emailProvider = StateProvider<String>((ref) => "");
 final phoneNumberProvider = StateProvider<String>((ref) => "");
 final passwordProvider = StateProvider<String>((ref) => "");
 final passwordVisibilityProvider = StateProvider<bool>((ref) => true);
+final loadingProvider = StateProvider<bool>((ref) => false);
 
 class SignupScreen extends ConsumerWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   bool isEmailValid(String email) {
     final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
@@ -22,7 +23,7 @@ class SignupScreen extends ConsumerWidget {
 
   bool isPasswordValid(String password) {
     final regex = RegExp(
-        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:"\\|,<>\./?])(?=.{6,})');
+        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:"\\|,<>\./?])(?=.{8,})');
     return regex.hasMatch(password);
   }
 
@@ -31,6 +32,8 @@ class SignupScreen extends ConsumerWidget {
   }
 
   Future<void> signUp(WidgetRef ref) async {
+    ref.read(loadingProvider.notifier).state = true;
+
     final firstName = ref.read(firstNameProvider);
     final lastName = ref.read(lastNameProvider);
     final email = ref.read(emailProvider);
@@ -45,6 +48,7 @@ class SignupScreen extends ConsumerWidget {
       ScaffoldMessenger.of(ref.context).showSnackBar(
         const SnackBar(content: Text("All fields are required!")),
       );
+      ref.read(loadingProvider.notifier).state = false;
       return;
     }
 
@@ -52,6 +56,7 @@ class SignupScreen extends ConsumerWidget {
       ScaffoldMessenger.of(ref.context).showSnackBar(
         const SnackBar(content: Text("Please enter a valid email address!")),
       );
+      ref.read(loadingProvider.notifier).state = false;
       return;
     }
 
@@ -59,6 +64,7 @@ class SignupScreen extends ConsumerWidget {
       ScaffoldMessenger.of(ref.context).showSnackBar(
         const SnackBar(content: Text("Phone number must be 10 digits!")),
       );
+      ref.read(loadingProvider.notifier).state = false;
       return;
     }
 
@@ -66,12 +72,13 @@ class SignupScreen extends ConsumerWidget {
       ScaffoldMessenger.of(ref.context).showSnackBar(
         const SnackBar(
             content: Text(
-                "Password must be at least 6 characters and include a letter, a number, and a special character!")),
+                "Password must be at least 8 characters and include a letter, a number, and a special character!")),
       );
+      ref.read(loadingProvider.notifier).state = false;
       return;
     }
 
-    const String url = "https://huddlehub-75fx.onrender.com/signup/";
+    const String url = "https://login-signup-docdoom.onrender.com/register/";
 
     final body = {
       "first_name": firstName,
@@ -88,29 +95,35 @@ class SignupScreen extends ConsumerWidget {
         body: jsonEncode(body),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final message = jsonDecode(response.body)["message"];
         ScaffoldMessenger.of(ref.context).showSnackBar(
-          SnackBar(content: Text("Signup Successful!")),
+          SnackBar(content: Text(message)),
         );
         Navigator.push(
           ref.context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       } else {
+        final error = jsonDecode(response.body);
+        final errorMessage = error.values.map((e) => e.join(" ")).join("\n");
         ScaffoldMessenger.of(ref.context).showSnackBar(
-          SnackBar(content: Text("Error: ${response.body}")),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(ref.context).showSnackBar(
         SnackBar(content: Text("Error: $e.")),
       );
+    } finally {
+      ref.read(loadingProvider.notifier).state = false;
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _obscurePassword = ref.watch(passwordVisibilityProvider);
+    final obscurePassword = ref.watch(passwordVisibilityProvider);
+    final isLoading = ref.watch(loadingProvider);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
@@ -143,7 +156,7 @@ class SignupScreen extends ConsumerWidget {
                     ),
                     textAlign: TextAlign.center,
                   )),
-              SizedBox(
+              const SizedBox(
                 height: 30,
               ),
               Padding(
@@ -152,7 +165,7 @@ class SignupScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(200, 255, 255, 255),
                     borderRadius: BorderRadius.circular(16.0),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black26,
                         blurRadius: 10,
@@ -218,27 +231,27 @@ class SignupScreen extends ConsumerWidget {
                       TextField(
                         decoration: InputDecoration(
                           labelText: "Password",
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword
+                              obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
                             ),
                             onPressed: () {
                               ref
                                   .read(passwordVisibilityProvider.notifier)
-                                  .state = !_obscurePassword;
+                                  .state = !obscurePassword;
                             },
                           ),
                         ),
-                        obscureText: _obscurePassword,
+                        obscureText: obscurePassword,
                         onChanged: (value) =>
                             ref.read(passwordProvider.notifier).state = value,
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: () => signUp(ref),
+                        onPressed: isLoading ? null : () => signUp(ref),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color.fromRGBO(202, 239, 184, 1),
                           shape: RoundedRectangleBorder(
@@ -246,12 +259,17 @@ class SignupScreen extends ConsumerWidget {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 14.0),
                         ),
-                        child: const Text(
-                          "Create Account",
-                          style: TextStyle(
-                              fontSize: 16,
-                              color: Color.fromARGB(255, 0, 0, 0)),
-                        ),
+                        child: isLoading
+                            ? const CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              )
+                            : const Text(
+                                "Create Account",
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
                       ),
                       const SizedBox(height: 20),
                     ],

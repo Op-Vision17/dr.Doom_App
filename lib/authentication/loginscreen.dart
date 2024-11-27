@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:doctor_doom/authentication/resetpass.dart';
 import 'package:doctor_doom/authentication/signupscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:doctor_doom/appui/homescreen.dart';
@@ -8,9 +9,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
 final passwordVisibilityProvider = StateProvider<bool>((ref) => true);
+final emailProvider = StateProvider<String>((ref) => '');
+final passwordProvider = StateProvider<String>((ref) => '');
+final loadingProvider = StateProvider<bool>((ref) => false);
 
 class LoginScreen extends ConsumerWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   bool isEmailValid(String email) {
     final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
@@ -27,7 +31,9 @@ class LoginScreen extends ConsumerWidget {
       return;
     }
 
-    const String url = "https://huddlehub-75fx.onrender.com/login/";
+    ref.read(loadingProvider.notifier).state = true;
+
+    const String url = "https://login-signup-docdoom.onrender.com/login/";
 
     final body = {
       "email": email,
@@ -40,33 +46,39 @@ class LoginScreen extends ConsumerWidget {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
-      final data = response.body;
+
+      final data = jsonDecode(response.body);
+
+      ref.read(loadingProvider.notifier).state = false;
 
       if (response.statusCode == 200) {
-        if (data == "Please enter valid password") {
-          ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("Invalid password. Please try again.")),
-          );
-        } else if (data == "Error occured") {
-          ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("User doesn't exist. Please try again.")),
-          );
-        } else {
-          final token = data.split('=')[1];
-          await saveToken(token);
-          ScaffoldMessenger.of(ref.context).showSnackBar(
-            SnackBar(content: Text("Login Successful!")),
-          );
+        final token = data['token'];
+        await saveToken(token);
 
-          Navigator.pushReplacement(
-            ref.context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          const SnackBar(content: Text("Login Successful!")),
+        );
+
+        Navigator.pushReplacement(
+          ref.context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else if (response.statusCode == 400) {
+        final error =
+            data['non_field_errors']?.join(' ') ?? "Invalid credentials.";
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
+      } else {
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  "An unexpected error occurred. Please try again later.")),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(ref.context).showSnackBar(
-        SnackBar(content: Text("Error: $e.")),
+        SnackBar(content: Text("Error: $e")),
       );
     }
   }
@@ -74,6 +86,7 @@ class LoginScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final _obscurePassword = ref.watch(passwordVisibilityProvider);
+    final isLoading = ref.watch(loadingProvider);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
@@ -89,23 +102,24 @@ class LoginScreen extends ConsumerWidget {
           Column(
             children: [
               Padding(
-                  padding: const EdgeInsets.only(top: 50.0),
-                  child: Text(
-                    "Dr. Doom",
-                    style: GoogleFonts.kablammo(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: const Color.fromARGB(255, 0, 0, 0),
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.5),
-                          offset: const Offset(2, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  )),
+                padding: const EdgeInsets.only(top: 50.0),
+                child: Text(
+                  "Dr. Doom",
+                  style: GoogleFonts.kablammo(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: const Color.fromARGB(255, 0, 0, 0),
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: const Offset(2, 2),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
               const Spacer(flex: 2),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -113,7 +127,7 @@ class LoginScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(200, 255, 255, 255),
                     borderRadius: BorderRadius.circular(16.0),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black26,
                         blurRadius: 10,
@@ -149,7 +163,7 @@ class LoginScreen extends ConsumerWidget {
                       TextField(
                         decoration: InputDecoration(
                           labelText: "Password",
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
@@ -167,11 +181,29 @@ class LoginScreen extends ConsumerWidget {
                         onChanged: (value) =>
                             ref.read(passwordProvider.notifier).state = value,
                       ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              ref.context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ResetPasswordScreen()),
+                            );
+                          },
+                          child: const Text(
+                            "Forgot Password?",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () => login(ref),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(202, 239, 184, 1),
+                          backgroundColor:
+                              const Color.fromRGBO(202, 239, 184, 1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
@@ -194,7 +226,7 @@ class LoginScreen extends ConsumerWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => SignupScreen()),
+                                    builder: (context) => const SignupScreen()),
                               );
                             },
                             child: const Text(
@@ -214,6 +246,10 @@ class LoginScreen extends ConsumerWidget {
               const Spacer(flex: 3),
             ],
           ),
+          if (isLoading)
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
         ],
       ),
     );

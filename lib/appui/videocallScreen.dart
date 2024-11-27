@@ -22,6 +22,8 @@ final requestToJoinProvider = StateProvider<String?>((ref) {
 });
 
 class VideoCallScreen extends ConsumerWidget {
+  const VideoCallScreen({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final participants = ref.watch(participantsProvider);
@@ -38,13 +40,13 @@ class VideoCallScreen extends ConsumerWidget {
           children: [
             // Meeting Information Container
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-              padding: EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+              margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
@@ -156,7 +158,7 @@ class VideoCallScreen extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Container(
-                        margin: EdgeInsets.all(12),
+                        margin: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.grey[300],
                           borderRadius: BorderRadius.circular(12),
@@ -176,12 +178,12 @@ class VideoCallScreen extends ConsumerWidget {
                               top: 10,
                               left: 16,
                               child: Container(
-                                padding: EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Row(
+                                child: const Row(
                                   children: [
                                     Icon(Icons.video_call,
                                         color: Colors.black, size: 17),
@@ -200,8 +202,9 @@ class VideoCallScreen extends ConsumerWidget {
                               child: Container(
                                 height: 50,
                                 width: 325,
-                                margin: EdgeInsets.symmetric(horizontal: 10),
-                                padding: EdgeInsets.symmetric(
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
                                 ),
                                 decoration: BoxDecoration(
@@ -224,7 +227,7 @@ class VideoCallScreen extends ConsumerWidget {
                   // Participant list
                   Container(
                     height: 100,
-                    margin: EdgeInsets.symmetric(horizontal: 12),
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: participants.length,
@@ -232,7 +235,7 @@ class VideoCallScreen extends ConsumerWidget {
                         bool micStatus = isMicOn;
 
                         return Container(
-                          margin: EdgeInsets.symmetric(horizontal: 8),
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
                           width: 80,
                           decoration: BoxDecoration(
                             color: Colors.grey[300],
@@ -246,8 +249,8 @@ class VideoCallScreen extends ConsumerWidget {
                                 right: 0,
                                 child: Center(
                                   child: Text(
-                                    "${participants[index]}",
-                                    style: TextStyle(
+                                    participants[index],
+                                    style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.black87,
@@ -290,8 +293,8 @@ class VideoCallScreen extends ConsumerWidget {
             ),
             // Bottom controls (mic, video, hand raise, etc.)
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -333,14 +336,14 @@ class VideoCallScreen extends ConsumerWidget {
                     icon: Icon(
                       Icons.front_hand,
                       color: isHandRaised
-                          ? Color.fromARGB(255, 238, 185, 80)
+                          ? const Color.fromARGB(255, 238, 185, 80)
                           : Colors.black,
                     ),
                     iconSize: 28,
                   ),
                   IconButton(
                     onPressed: () {},
-                    icon: Icon(Icons.chat, color: Colors.black),
+                    icon: const Icon(Icons.chat, color: Colors.black),
                     iconSize: 28,
                   ),
                   Container(
@@ -351,7 +354,7 @@ class VideoCallScreen extends ConsumerWidget {
                     ),
                     child: IconButton(
                       onPressed: () {},
-                      icon: Icon(Icons.call_end, color: Colors.white),
+                      icon: const Icon(Icons.call_end, color: Colors.white),
                       iconSize: 28,
                     ),
                   ),

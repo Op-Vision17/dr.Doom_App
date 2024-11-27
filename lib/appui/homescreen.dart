@@ -1,3 +1,4 @@
+import 'package:doctor_doom/appui/profile.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +63,13 @@ class HomeScreen extends StatelessWidget {
                               IconButton(
                                 icon: const Icon(Icons.person_2_rounded,
                                     color: Colors.white),
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ProfilePage()),
+                                  );
+                                },
                               ),
                               IconButton(
                                 icon: const Icon(Icons.logout_rounded,
