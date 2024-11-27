@@ -287,7 +287,7 @@ class VideoCallScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            // Bottom controls (mic, video, hand raise, etc.)
+
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
