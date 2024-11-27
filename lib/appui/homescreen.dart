@@ -1,4 +1,5 @@
-import 'package:doctor_doom/appui/joinmeeting.dart';
+
+import 'package:doctor_doom/appui/MeetingIDscreen.dart';
 import 'package:doctor_doom/appui/profile.dart';
 import 'package:doctor_doom/appui/startmeeting.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
@@ -129,11 +130,45 @@ class HomeScreen extends StatelessWidget {
                     ActionButton(
                       label: "Join Meeting",
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => JoinMeetingScreen()),
-                        );
+
+                        Navigator.of(context).push(PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  UniqueJoinMeetingPage(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const curve = Curves.easeInOut;
+
+                            return Stack(
+                              children: [
+                                SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: Offset(
+                                        1.5, 0), // Background slides faster
+                                    end: Offset.zero,
+                                  ).animate(CurvedAnimation(
+                                    parent: animation,
+                                    curve: curve,
+                                  )),
+                                  child: Container(
+                                      color: Colors
+                                          .blue), // Placeholder for background
+                                ),
+                                SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: Offset(1.0, 0),
+                                    end: Offset.zero,
+                                  ).animate(CurvedAnimation(
+                                    parent: animation,
+                                    curve: curve,
+                                  )),
+                                  child: child,
+                                ),
+                              ],
+                            );
+                          },
+                        ));
+
                       },
                     ),
                   ],

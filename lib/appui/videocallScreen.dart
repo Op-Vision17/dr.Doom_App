@@ -134,19 +134,15 @@ class VideoCallScreen extends ConsumerWidget {
               ),
             ],
 
-            // Add a button to simulate a request to join
             ElevatedButton(
               onPressed: () {
-                // Simulate a request from a user named "Anshika"
                 ref.read(requestToJoinProvider.notifier).state = "Anshika";
 
-                // Simulate removing the request after 10 seconds (for demonstration)
-                Future.delayed(Duration(seconds: 10), () {
-                  // If the owner hasn't approved the request, it will disappear
+                Future.delayed(Duration(seconds: 40), () {
                   ref.read(requestToJoinProvider.notifier).state = null;
                 });
               },
-              child: Text('Simulate Request'),
+              child: Text('send Request'),
             ),
 
             // Other content
