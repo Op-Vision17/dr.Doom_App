@@ -1,4 +1,5 @@
 import 'package:doctor_doom/appui/MeetingIDscreen.dart';
+import 'package:doctor_doom/appui/Schedule.dart';
 import 'package:doctor_doom/appui/joinmeeting.dart';
 import 'package:doctor_doom/appui/profile.dart';
 import 'package:doctor_doom/appui/startmeeting.dart';
@@ -117,7 +118,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.of(context).push(PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
-                                  UniqueJoinMeetingPage(),
+                                  ScheduleMeetingScreen(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             const curve = Curves.easeInOut;
