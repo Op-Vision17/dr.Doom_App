@@ -206,16 +206,13 @@ class HomeScreen extends StatelessWidget {
                               children: [
                                 SlideTransition(
                                   position: Tween<Offset>(
-                                    begin: Offset(
-                                        1.5, 0), // Background slides faster
+                                    begin: Offset(1.5, 0),
                                     end: Offset.zero,
                                   ).animate(CurvedAnimation(
                                     parent: animation,
                                     curve: curve,
                                   )),
-                                  child: Container(
-                                      color: Colors
-                                          .blue), // Placeholder for background
+                                  child: Container(color: Colors.blue),
                                 ),
                                 SlideTransition(
                                   position: Tween<Offset>(
