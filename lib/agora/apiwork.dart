@@ -37,6 +37,7 @@ Future<Map<String, dynamic>?> fetchAgoraToken(String roomName) async {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+
       final token = data['token'];
       final int uid = data['uid'];
 

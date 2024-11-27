@@ -55,10 +55,25 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
             child: Container(
               color: Colors.black, // Placeholder for video stream
               child: meetingJoined
-                  ? AgoraService.remoteVideo() // Display remote video view
+                  ? Stack(
+                      children: [
+                        AgoraService.remoteVideo(), // Display remote video view
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            width: 120,
+                            height: 160,
+                            color: Colors.black.withOpacity(0.5),
+                            child: AgoraService
+                                .localVideo(), // Display local video view
+                          ),
+                        ),
+                      ],
+                    )
                   : Center(
-                      child:
-                          CircularProgressIndicator()), // Show loading while joining
+                      child: CircularProgressIndicator(),
+                    ),
             ),
           ),
           Row(
@@ -68,7 +83,9 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
               IconButton(
                 icon: Icon(
                   muteStatus ? Icons.mic_off : Icons.mic,
-                  color: muteStatus ? Colors.red : Colors.white,
+                  color: muteStatus
+                      ? Colors.red
+                      : const Color.fromARGB(255, 0, 0, 0),
                 ),
                 onPressed: () async {
                   ref.read(muteProvider.notifier).state = !muteStatus;
@@ -80,7 +97,9 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
               IconButton(
                 icon: Icon(
                   cameraStatus ? Icons.videocam_off : Icons.videocam,
-                  color: cameraStatus ? Colors.red : Colors.white,
+                  color: cameraStatus
+                      ? Colors.red
+                      : const Color.fromARGB(255, 0, 0, 0),
                 ),
                 onPressed: () async {
                   ref.read(cameraProvider.notifier).state = !cameraStatus;

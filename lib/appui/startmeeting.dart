@@ -61,7 +61,6 @@ class Startmeeting extends ConsumerWidget {
               SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  meetingServiceProvider;
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
