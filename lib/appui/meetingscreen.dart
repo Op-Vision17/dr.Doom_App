@@ -35,64 +35,17 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
   bool _isCameraOff = false;
 
   @override
-  void initState() {
-    super.initState();
-    // Initialize roomName and userName in providers
-    ref.read(roomNameProvider.notifier).state = widget.roomName;
-    ref.read(userNameProvider.notifier).state = widget.userName;
-
-    // Initialize the meeting on screen load
-    _initializeMeeting();
-  }
-
-  Future<void> _initializeMeeting() async {
-    // Check for camera and microphone permissions
-    if (await AgoraService.checkPermissions()) {
-      final tokenData = await fetchAgoraToken(widget.roomName);
-      if (tokenData == null ||
-          tokenData['token'] == null ||
-          tokenData['uid'] == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to get Agora token or UID')),
-        );
-        return;
-      }
-
-      // Set the token and uid in the Riverpod providers
-      ref.read(tokenProvider.notifier).state = tokenData['token']!;
-      ref.read(meetingUidProvider.notifier).state = tokenData['uid'] as int;
-
-      // Initialize Agora service and join the channel
-      await AgoraService.initializeAgora();
-      await AgoraService.joinChannel(widget.roomName, widget.userName);
-
-      // Set meeting joined status in Riverpod
-      ref.read(meetingJoinedProvider.notifier).state = true;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Camera or microphone permissions denied')),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    // Leave the Agora channel when the screen is disposed
-    AgoraService.leaveChannel(widget.roomName, widget.userName);
-
-    // Reset the meeting state
-    ref.read(meetingJoinedProvider.notifier).state = false;
-    ref.read(meetingUidProvider.notifier).state = null; // Reset UID
-  }
-
-  @override
   Widget build(BuildContext context) {
     final token = ref.watch(tokenProvider);
     final muteStatus = ref.watch(muteProvider);
     final cameraStatus = ref.watch(cameraProvider);
     final meetingJoined = ref.watch(meetingJoinedProvider);
-    final meetingUid = ref.watch(meetingUidProvider); // Access the meeting UID
+    final meetingUid = ref.watch(meetingUidProvider);
+
+    // Check if the meeting has already been joined, if not, initialize it
+    if (!meetingJoined) {
+      _initializeMeeting(context);
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text('Meeting: ${widget.roomName}')),
@@ -152,5 +105,35 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _initializeMeeting(BuildContext context) async {
+    // Check for camera and microphone permissions
+    if (await AgoraService.checkPermissions()) {
+      final tokenData = await fetchAgoraToken(widget.roomName);
+      if (tokenData == null ||
+          tokenData['token'] == null ||
+          tokenData['uid'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to get Agora token or UID')),
+        );
+        return;
+      }
+
+      // Set the token and uid in the Riverpod providers
+      ref.read(tokenProvider.notifier).state = tokenData['token']!;
+      ref.read(meetingUidProvider.notifier).state = tokenData['uid'] as int;
+
+      // Initialize Agora service and join the channel
+      await AgoraService.initializeAgora();
+      await AgoraService.joinChannel(widget.roomName, widget.userName);
+
+      // Set meeting joined status in Riverpod
+      ref.read(meetingJoinedProvider.notifier).state = true;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Camera or microphone permissions denied')),
+      );
+    }
   }
 }

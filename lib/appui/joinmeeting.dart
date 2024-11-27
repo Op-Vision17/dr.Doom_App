@@ -1,14 +1,20 @@
-import 'package:doctor_doom/agora/agoraservices.dart';
-import 'package:doctor_doom/agora/apiwork.dart';
 import 'package:doctor_doom/appui/meetingscreen.dart';
-import 'package:doctor_doom/appui/videoscreen.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 final roomNameProvider = StateProvider<String>((ref) => '');
 final userNameProvider = StateProvider<String>((ref) => '');
 
 class JoinMeetingScreen extends ConsumerWidget {
+  int generateUuid3Digits() {
+    var uuid = Uuid();
+    String fullUuid = uuid.v4();
+    int hash = fullUuid.hashCode;
+    return (hash.abs() % 900 + 100);
+  }
+
   // Future<void> joinmeeting(BuildContext context, WidgetRef ref) async {
   //   final roomname = ref.read(roomNameProvider);
   //   final tokendata = await fetchAgoraToken(roomname);
@@ -73,14 +79,13 @@ class JoinMeetingScreen extends ConsumerWidget {
               SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  meetingServiceProvider;
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                         builder: (context) => MeetingScreen(
                               roomName: roomName,
                               userName: userName,
-                              uid: 0,
+                              uid: generateUuid3Digits(),
                             )),
                   );
                 },
