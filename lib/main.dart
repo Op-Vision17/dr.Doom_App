@@ -1,8 +1,7 @@
-import 'package:doctor_doom/authentication/loginscreen.dart';
-import 'package:doctor_doom/authentication/tokenmanage.dart';
-import 'package:doctor_doom/appui/homescreen.dart';
+import 'package:doctor_doom/appui/videocallScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:doctor_doom/appui/splashscreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,22 +20,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: FutureBuilder<bool>(
-        future: isUserLoggedIn(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return const Center(child: Text("Error checking login status"));
-          }
-
-          final bool isLoggedIn = snapshot.data ?? false;
-
-          return isLoggedIn ? const HomeScreen() : const LoginScreen();
-        },
-      ),
+      home: VideoCallScreen(),
     );
   }
 }
