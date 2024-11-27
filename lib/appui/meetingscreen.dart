@@ -39,7 +39,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Meeting: ${widget.roomName}')),
+      appBar: AppBar(title: Text('Room Name: ${widget.roomName}')),
       body: Column(
         children: [
           Expanded(
@@ -56,7 +56,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
                           right: 10,
                           child: Container(
                             width: 120,
-                            height: 160,
+                            height: 140,
                             color: Colors.black.withOpacity(0.5),
                             child: AgoraService.localVideo(),
                           ),
