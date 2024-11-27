@@ -1,7 +1,6 @@
-
 import 'package:doctor_doom/appui/MeetingIDscreen.dart';
 import 'package:doctor_doom/appui/profile.dart';
-import 'package:doctor_doom/appui/startmeeting.dart';
+import 'package:doctor_doom/appui/videocallScreen.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:flutter/material.dart';
@@ -122,7 +121,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => Startmeetingscreen()),
+                              builder: (context) => VideoCallScreen()),
                         );
                       },
                     ),
@@ -130,7 +129,6 @@ class HomeScreen extends StatelessWidget {
                     ActionButton(
                       label: "Join Meeting",
                       onPressed: () {
-
                         Navigator.of(context).push(PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
@@ -168,7 +166,6 @@ class HomeScreen extends StatelessWidget {
                             );
                           },
                         ));
-
                       },
                     ),
                   ],
