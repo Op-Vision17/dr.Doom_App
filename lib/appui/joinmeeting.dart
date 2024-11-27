@@ -1,5 +1,7 @@
+import 'package:doctor_doom/agora/agoraservices.dart';
 import 'package:doctor_doom/agora/apiwork.dart';
 import 'package:doctor_doom/appui/meetingscreen.dart';
+import 'package:doctor_doom/appui/videoscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +9,24 @@ final roomNameProvider = StateProvider<String>((ref) => '');
 final userNameProvider = StateProvider<String>((ref) => '');
 
 class JoinMeetingScreen extends ConsumerWidget {
+  // Future<void> joinmeeting(BuildContext context, WidgetRef ref) async {
+  //   final roomname = ref.read(roomNameProvider);
+  //   final tokendata = await fetchAgoraToken(roomname);
+  //   if (tokendata == null || tokendata.isEmpty) {
+  //     throw Exception('Token fetch failed');
+  //   }
+
+  //   Navigator.pushReplacement(
+  //     context,
+  //     MaterialPageRoute(
+  //         builder: (context) => VideoScreen(
+  //               appId: '2f3131394cc6417b91aa93cfde567a37',
+  //               channelName: roomname,
+  //               token: tokendata['token'],
+  //             )),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final roomName = ref.watch(roomNameProvider);
@@ -53,13 +73,14 @@ class JoinMeetingScreen extends ConsumerWidget {
               SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  fetchAgoraToken(roomName);
+                  meetingServiceProvider;
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                         builder: (context) => MeetingScreen(
                               roomName: roomName,
                               userName: userName,
+                              uid: 0,
                             )),
                   );
                 },

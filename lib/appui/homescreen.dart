@@ -2,7 +2,6 @@ import 'package:doctor_doom/appui/MeetingIDscreen.dart';
 import 'package:doctor_doom/appui/joinmeeting.dart';
 import 'package:doctor_doom/appui/profile.dart';
 import 'package:doctor_doom/appui/startmeeting.dart';
-import 'package:doctor_doom/appui/videocallScreen.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:flutter/material.dart';

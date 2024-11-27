@@ -17,10 +17,12 @@ final meetingUidProvider =
 class MeetingScreen extends ConsumerStatefulWidget {
   final String roomName;
   final String userName;
+  final int uid;
 
   const MeetingScreen({
     required this.roomName,
     required this.userName,
+    required this.uid,
     Key? key,
   }) : super(key: key);
 
@@ -46,16 +48,19 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
   Future<void> _initializeMeeting() async {
     // Check for camera and microphone permissions
     if (await AgoraService.checkPermissions()) {
-      final token = await fetchAgoraToken(widget.roomName);
-      if (token == null || token.isEmpty) {
+      final tokenData = await fetchAgoraToken(widget.roomName);
+      if (tokenData == null ||
+          tokenData['token'] == null ||
+          tokenData['uid'] == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to get Agora token')),
+          SnackBar(content: Text('Failed to get Agora token or UID')),
         );
         return;
       }
 
-      // Set the token in the Riverpod provider
-      ref.read(tokenProvider.notifier).state = token;
+      // Set the token and uid in the Riverpod providers
+      ref.read(tokenProvider.notifier).state = tokenData['token']!;
+      ref.read(meetingUidProvider.notifier).state = tokenData['uid'] as int;
 
       // Initialize Agora service and join the channel
       await AgoraService.initializeAgora();
@@ -75,6 +80,10 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
     super.dispose();
     // Leave the Agora channel when the screen is disposed
     AgoraService.leaveChannel(widget.roomName, widget.userName);
+
+    // Reset the meeting state
+    ref.read(meetingJoinedProvider.notifier).state = false;
+    ref.read(meetingUidProvider.notifier).state = null; // Reset UID
   }
 
   @override

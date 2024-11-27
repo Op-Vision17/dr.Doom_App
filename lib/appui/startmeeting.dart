@@ -1,4 +1,4 @@
-import 'package:doctor_doom/agora/apiwork.dart';
+import 'package:doctor_doom/agora/agoraservices.dart';
 import 'package:doctor_doom/appui/meetingscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +14,7 @@ class Startmeeting extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Join Meeting'),
+        title: Text('Start Meeting'),
         backgroundColor: Colors.teal,
       ),
       body: Stack(children: [
@@ -53,13 +53,14 @@ class Startmeeting extends ConsumerWidget {
               SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  fetchAgoraToken(roomName);
+                  meetingServiceProvider;
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                         builder: (context) => MeetingScreen(
                               roomName: roomName,
                               userName: userName,
+                              uid: 0,
                             )),
                   );
                 },

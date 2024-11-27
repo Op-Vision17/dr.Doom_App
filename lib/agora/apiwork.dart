@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
-/// Call the API to delete a member from the server
 Future<String?> leaveMeeting(String name, int uid, String roomName) async {
   const String apiUrl = 'https://agora-8ojc.onrender.com/delete_member/';
 
@@ -18,7 +16,7 @@ Future<String?> leaveMeeting(String name, int uid, String roomName) async {
     );
 
     if (response.statusCode == 200) {
-      return response.body; // Return the response body as a string
+      return response.body;
     } else {
       print('Error: ${response.body}');
       return null;
@@ -29,11 +27,7 @@ Future<String?> leaveMeeting(String name, int uid, String roomName) async {
   }
 }
 
-// Provider to store the meeting UID
-final meetingUidProvider = StateProvider<int?>((ref) => null);
-
-// Fetch an Agora token from the server
-Future<String?> fetchAgoraToken(String roomName) async {
+Future<Map<String, dynamic>?> fetchAgoraToken(String roomName) async {
   const String apiUrl = 'https://agora-8ojc.onrender.com/get_token/';
 
   try {
@@ -43,10 +37,10 @@ Future<String?> fetchAgoraToken(String roomName) async {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final token = data['token']; // Extract token
-      final uid = data['uid']; // Extract UID
+      final token = data['token'];
+      final int uid = data['uid'];
 
-      return token;
+      return {'token': token, 'uid': uid};
     } else {
       print('Error: ${response.body}');
       return null;
@@ -57,7 +51,6 @@ Future<String?> fetchAgoraToken(String roomName) async {
   }
 }
 
-/// Create a member in the Agora channel
 Future<bool> createMember(String name, int uid, String roomName) async {
   const String apiUrl = 'https://agora-8ojc.onrender.com/create_member/';
 
@@ -93,7 +86,7 @@ Future<String?> fetchMemberDetails(String uid, String roomName) async {
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['name']; // Extracting the 'name' field from the response
+      return data['name'];
     } else {
       print('Failed to load member details');
       return null;
