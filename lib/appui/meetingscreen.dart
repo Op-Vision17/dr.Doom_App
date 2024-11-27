@@ -55,10 +55,11 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
                           bottom: 10,
                           right: 10,
                           child: Container(
-                            width: 120,
-                            height: 140,
+                            width: 150,
+                            height: 200,
                             color: Colors.black.withOpacity(0.5),
-                            child: AgoraService.localVideo(),
+                            child: Positioned.fill(
+                                child: AgoraService.localVideo()),
                           ),
                         ),
                       ],
@@ -91,7 +92,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
                   ),
                   onPressed: () async {
                     ref.read(cameraProvider.notifier).state = !cameraStatus;
-                    await AgoraService.muteLocalVideo(cameraStatus);
+                    await AgoraService.muteLocalVideo(!cameraStatus);
                   },
                 ),
                 IconButton(
