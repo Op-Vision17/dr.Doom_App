@@ -5,8 +5,9 @@ plugins {
 }
 
 android {
-    namespace = "com.example.doctor_doom" // Your app's namespace
-    compileSdk = flutter.compileSdkVersion
+    namespace = "com.example.doctor_doom" 
+    namespace = "io.agora.rtm"
+    compileSdk = 33
     namespace = "io.agora.rtm"
     ndkVersion = flutter.ndkVersion
 
@@ -22,9 +23,9 @@ android {
     defaultConfig {
         applicationId = "com.example.doctor_doom"
         minSdk = 21
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        targetSdk = 33
+        versionCode = 1
+        versionName = "1.0"
         multiDexEnabled true
     }
 

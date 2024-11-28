@@ -5,6 +5,10 @@ allprojects {
     }
 }
 
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
+
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
@@ -12,10 +16,13 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 }
-
-tasks.register("clean", Delete) {
-    delete rootProject.buildDir
+buildscript {
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.1.0" // Use the latest stable version
+    }
 }
+
+
 
 
 
