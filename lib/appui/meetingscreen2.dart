@@ -8,7 +8,6 @@ final userNameProvider = StateProvider<String>((ref) => '');
 final muteProvider = StateProvider<bool>((ref) => false);
 final cameraProvider = StateProvider<bool>((ref) => false);
 final meetingJoinedProvider = StateProvider<bool>((ref) => false);
-final tokenProvider = StateProvider<String>((ref) => '');
 final meetingUidProvider = StateProvider<int?>((ref) => null);
 
 class Meetingscreen2 extends ConsumerStatefulWidget {
@@ -132,7 +131,7 @@ class _Meetingscreen2State extends ConsumerState<Meetingscreen2> {
                   icon: const Icon(Icons.exit_to_app, color: Colors.red),
                   onPressed: () async {
                     await AgoraService.leaveChannel(
-                        widget.roomName, widget.userName);
+                        widget.roomName, widget.uid, widget.userName);
                     Navigator.pop(context);
                   },
                 ),

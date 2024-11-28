@@ -137,7 +137,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
                   icon: const Icon(Icons.exit_to_app, color: Colors.red),
                   onPressed: () async {
                     await AgoraService.leaveChannel(
-                        widget.roomName, widget.userName);
+                        widget.roomName, widget.uid, widget.userName);
                     Navigator.pop(context);
                   },
                 ),
