@@ -1,83 +1,74 @@
 import 'dart:convert';
-import 'package:doctor_doom/authentication/resetpass.dart';
-import 'package:doctor_doom/authentication/signupscreen.dart';
-import 'package:doctor_doom/authentication/tokenmanage.dart';
-import 'package:doctor_doom/appui/homescreen.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:doctor_doom/authentication/loginscreen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+final emailProvider = StateProvider<String>((ref) => "");
+final newPasswordProvider = StateProvider<String>((ref) => "");
 final passwordVisibilityProvider = StateProvider<bool>((ref) => true);
-final emailProvider = StateProvider<String>((ref) => '');
-final passwordProvider = StateProvider<String>((ref) => '');
-final loadingProvider = StateProvider<bool>((ref) => false);
 
-class LoginScreen extends ConsumerWidget {
-  const LoginScreen({super.key});
+class ResetPasswordScreen extends ConsumerWidget {
+  const ResetPasswordScreen({Key? key}) : super(key: key);
 
-  bool isEmailValid(String email) {
-    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    return regex.hasMatch(email);
-  }
+  Future<void> resetPassword(BuildContext context, WidgetRef ref) async {
+    final email = ref.read(emailProvider).trim();
+    final newPassword = ref.read(newPasswordProvider).trim();
 
-  Future<void> login(WidgetRef ref) async {
-    final email = ref.read(emailProvider);
-    final password = ref.read(passwordProvider);
-    if (!isEmailValid(email)) {
-      ScaffoldMessenger.of(ref.context).showSnackBar(
-        const SnackBar(content: Text("Please enter a valid email address!")),
+    if (newPassword.isEmpty || newPassword.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Password must be at least 8 characters long!")),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('resetToken');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("No reset token found. Please request again.")),
       );
       return;
     }
 
     ref.read(loadingProvider.notifier).state = true;
-
-    const String url = "https://login-signup-docdoom.onrender.com/login/";
-
-    final body = {
-      "email": email,
-      "password": password,
-    };
-
+    const String url =
+        "https://login-signup-docdoom.onrender.com/set-new-password/";
     try {
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
+        body: jsonEncode({
+          'email': email,
+          'token': token,
+          'new_password': newPassword,
+        }),
       );
-
-      final data = jsonDecode(response.body);
 
       ref.read(loadingProvider.notifier).state = false;
 
       if (response.statusCode == 200) {
-        final token = data['token'];
-        await saveToken(token);
-
-        ScaffoldMessenger.of(ref.context).showSnackBar(
-          const SnackBar(content: Text("Login Successful!")),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Password reset successfully!")),
         );
-
-        Navigator.pushReplacement(
-          ref.context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } else if (response.statusCode == 400) {
-        final error =
-            data['non_field_errors']?.join(' ') ?? "Invalid credentials.";
-        ScaffoldMessenger.of(ref.context).showSnackBar(
-          SnackBar(content: Text(error)),
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       } else {
-        ScaffoldMessenger.of(ref.context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text(
-                  "An unexpected error occurred. Please try again later.")),
+              content: Text("Something went wrong. Please try again.")),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(ref.context).showSnackBar(
+      ref.read(loadingProvider.notifier).state = false;
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
     }
@@ -85,8 +76,8 @@ class LoginScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _obscurePassword = ref.watch(passwordVisibilityProvider);
     final isLoading = ref.watch(loadingProvider);
+    final _obscurePassword = ref.watch(passwordVisibilityProvider);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
@@ -141,7 +132,7 @@ class LoginScreen extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'LOGIN',
+                        'RESET PASSWORD',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 28,
@@ -162,7 +153,7 @@ class LoginScreen extends ConsumerWidget {
                       const SizedBox(height: 20),
                       TextField(
                         decoration: InputDecoration(
-                          labelText: "Password",
+                          labelText: "New Password",
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -178,31 +169,18 @@ class LoginScreen extends ConsumerWidget {
                           ),
                         ),
                         obscureText: _obscurePassword,
-                        onChanged: (value) =>
-                            ref.read(passwordProvider.notifier).state = value,
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              ref.context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const requesttokenscreen()),
-                            );
-                          },
-                          child: const Text(
-                            "Forgot Password?",
-                            style: TextStyle(color: Colors.blue),
-                          ),
-                        ),
+                        onChanged: (value) => ref
+                            .read(newPasswordProvider.notifier)
+                            .state = value,
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: isLoading ? null : () => login(ref),
+                        onPressed: isLoading
+                            ? null
+                            : () => resetPassword(context, ref),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(202, 239, 184, 1),
+                          backgroundColor:
+                              const Color.fromRGBO(202, 239, 184, 1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
@@ -210,38 +188,14 @@ class LoginScreen extends ConsumerWidget {
                         ),
                         child: isLoading
                             ? const CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                color: Colors.black,
                               )
                             : const Text(
-                                "Login",
+                                "Reset",
                                 style: TextStyle(
                                     fontSize: 16,
                                     color: Color.fromARGB(255, 0, 0, 0)),
                               ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("New user? "),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const SignupScreen()),
-                              );
-                            },
-                            child: const Text(
-                              "Register",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),

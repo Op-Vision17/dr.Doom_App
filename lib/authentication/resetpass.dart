@@ -1,14 +1,16 @@
 import 'dart:convert';
+import 'package:doctor_doom/authentication/resetpass2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 final emailProvider = StateProvider<String>((ref) => "");
 final loadingProvider = StateProvider<bool>((ref) => false);
 
-class ResetPasswordScreen extends ConsumerWidget {
-  const ResetPasswordScreen({Key? key}) : super(key: key);
+class requesttokenscreen extends ConsumerWidget {
+  const requesttokenscreen({Key? key}) : super(key: key);
 
   Future<void> sendResetLink(BuildContext context, WidgetRef ref) async {
     final email = ref.read(emailProvider).trim();
@@ -22,7 +24,7 @@ class ResetPasswordScreen extends ConsumerWidget {
 
     ref.read(loadingProvider.notifier).state = true;
     const String url =
-        "https://login-signup-docdoom.onrender.com/password-reset/";
+        "https://login-signup-docdoom.onrender.com/password-reset-request/";
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -33,24 +35,20 @@ class ResetPasswordScreen extends ConsumerWidget {
       ref.read(loadingProvider.notifier).state = false;
 
       if (response.statusCode == 200) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text("Reset Link Sent"),
-              content: Text("A reset link has been sent to $email."),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Login Now"),
-                ),
-              ],
-            );
-          },
+        final data = jsonDecode(response.body);
+        final token = data['token'];
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('resetToken', token);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  "Reset token generated. Use it to reset your password.")),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ResetPasswordScreen()),
         );
       } else if (response.statusCode == 400) {
         final error = jsonDecode(response.body);
@@ -164,7 +162,7 @@ class ResetPasswordScreen extends ConsumerWidget {
                                 color: Colors.black,
                               )
                             : const Text(
-                                "Send Reset Link",
+                                "Request Reset",
                                 style: TextStyle(
                                     fontSize: 16,
                                     color: Color.fromARGB(255, 0, 0, 0)),

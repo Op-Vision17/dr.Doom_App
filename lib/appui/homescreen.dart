@@ -1,5 +1,6 @@
 import 'package:doctor_doom/appui/CreateMeeting.dart';
 import 'package:doctor_doom/appui/MeetingIDscreen.dart';
+import 'package:doctor_doom/appui/joinmeeting.dart';
 import 'package:doctor_doom/appui/profile.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
@@ -112,7 +113,28 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     ActionButton(
                       label: "Schedule Now",
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  UniqueJoinMeetingPage(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const curve = Curves.easeInOut;
+
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                begin: Offset(1.5, 0),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: animation,
+                                curve: curve,
+                              )),
+                              child: child,
+                            );
+                          },
+                        ));
+                      },
                     ),
                     const SizedBox(height: 20),
                     ActionButton(
@@ -126,32 +148,15 @@ class HomeScreen extends StatelessWidget {
                               (context, animation, secondaryAnimation, child) {
                             const curve = Curves.easeInOut;
 
-                            return Stack(
-                              children: [
-                                SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: Offset(
-                                        1.5, 0), // Background slides faster
-                                    end: Offset.zero,
-                                  ).animate(CurvedAnimation(
-                                    parent: animation,
-                                    curve: curve,
-                                  )),
-                                  child: Container(
-                                      color: Colors
-                                          .blue), // Placeholder for background
-                                ),
-                                SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: Offset(1.0, 0),
-                                    end: Offset.zero,
-                                  ).animate(CurvedAnimation(
-                                    parent: animation,
-                                    curve: curve,
-                                  )),
-                                  child: child,
-                                ),
-                              ],
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                begin: Offset(1.5, 0),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: animation,
+                                curve: curve,
+                              )),
+                              child: child,
                             );
                           },
                         ));
@@ -164,37 +169,20 @@ class HomeScreen extends StatelessWidget {
                         Navigator.of(context).push(PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
-                                  UniqueJoinMeetingPage(),
+                                  JoinMeetingScreen(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             const curve = Curves.easeInOut;
 
-                            return Stack(
-                              children: [
-                                SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: Offset(
-                                        1.5, 0), // Background slides faster
-                                    end: Offset.zero,
-                                  ).animate(CurvedAnimation(
-                                    parent: animation,
-                                    curve: curve,
-                                  )),
-                                  child: Container(
-                                      color: Colors
-                                          .blue), // Placeholder for background
-                                ),
-                                SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: Offset(1.0, 0),
-                                    end: Offset.zero,
-                                  ).animate(CurvedAnimation(
-                                    parent: animation,
-                                    curve: curve,
-                                  )),
-                                  child: child,
-                                ),
-                              ],
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                begin: Offset(1.5, 0),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: animation,
+                                curve: curve,
+                              )),
+                              child: child,
                             );
                           },
                         ));
