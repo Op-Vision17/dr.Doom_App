@@ -15,12 +15,10 @@ final meetingUidProvider = StateProvider<int?>((ref) => null);
 class MeetingScreen extends ConsumerStatefulWidget {
   final String roomName;
   final String userName;
-  final int uid;
 
   const MeetingScreen({
     required this.roomName,
     required this.userName,
-    required this.uid,
     Key? key,
     required bool isVideoOn,
     required bool isMicOn,
@@ -36,44 +34,26 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
     final muteStatus = ref.watch(muteProvider);
     final cameraStatus = ref.watch(cameraProvider);
     final meetingJoined = ref.watch(meetingJoinedProvider);
-    final meetingid = ref.watch(tokenProvider);
 
     if (!meetingJoined) {
       _initializeMeeting(context);
     }
 
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'roomName: ${widget.roomName}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'ID: ${meetingid}',
-                    style: TextStyle(fontSize: 12, color: Colors.white70),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.copy, size: 16, color: Colors.white),
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: meetingid));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Token copied to clipboard')),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
+        title: Text(
+          'Room: ${widget.roomName}',
+          style: TextStyle(
+            fontSize: screenWidth * 0.05,
+            fontWeight: FontWeight.bold,
+            color: Colors.black, // Black text color
+          ),
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.teal, // Teal background
       ),
       body: Column(
         children: [
@@ -83,20 +63,21 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
               child: meetingJoined
                   ? Stack(
                       children: [
-                        // Remote video spans the entire screen
                         Positioned.fill(
-                          child: AgoraService.remoteVideo(),
+                          child: AgoraService
+                              .remoteVideos(), // Dynamic remote videos
                         ),
-                        // Local video at the bottom-right corner
                         Positioned(
                           bottom: 10,
                           right: 10,
                           child: Container(
-                            width: 120,
-                            height: 160,
-                            color: Colors.black.withOpacity(0.5),
-                            child: Positioned.fill(
-                                child: AgoraService.localVideo(widget.uid)),
+                            width: screenWidth * 0.3,
+                            height: screenHeight * 0.2,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: AgoraService.localVideo(), // Local video
                           ),
                         ),
                       ],
@@ -106,38 +87,47 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
                     ),
             ),
           ),
-          // Button bar
           Container(
             color: Colors.black87,
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                IconButton(
-                  icon: Icon(
-                    muteStatus ? Icons.mic_off : Icons.mic,
-                    color: muteStatus ? Colors.red : Colors.white,
-                  ),
+                _controlButton(
+                  context: context,
+                  icon: muteStatus ? Icons.mic_off : Icons.mic,
+                  color: muteStatus ? Colors.red : Colors.white,
                   onPressed: () async {
-                    ref.read(muteProvider.notifier).state = !muteStatus;
-                    await AgoraService.muteLocalAudio(!muteStatus);
+                    final newMuteStatus = !muteStatus;
+                    ref.read(muteProvider.notifier).state = newMuteStatus;
+                    await AgoraService.muteLocalAudio(newMuteStatus);
                   },
                 ),
-                IconButton(
-                  icon: Icon(
-                    cameraStatus ? Icons.videocam_off : Icons.videocam,
-                    color: cameraStatus ? Colors.red : Colors.white,
-                  ),
+                _controlButton(
+                  context: context,
+                  icon: cameraStatus ? Icons.videocam_off : Icons.videocam,
+                  color: cameraStatus ? Colors.red : Colors.white,
                   onPressed: () async {
-                    ref.read(cameraProvider.notifier).state = !cameraStatus;
-                    await AgoraService.muteLocalVideo(cameraStatus);
+                    final newCameraStatus = !cameraStatus;
+                    ref.read(cameraProvider.notifier).state = newCameraStatus;
+                    await AgoraService.muteLocalVideo(newCameraStatus);
                   },
                 ),
-                IconButton(
-                  icon: const Icon(Icons.exit_to_app, color: Colors.red),
+                _controlButton(
+                  context: context,
+                  icon: Icons.chat_bubble_outline, // Chat button icon
+                  color: Colors.white,
+                  onPressed: () {
+                    // No functionality added yet
+                  },
+                ),
+                _controlButton(
+                  context: context,
+                  icon: Icons.exit_to_app,
+                  color: Colors.red,
                   onPressed: () async {
                     await AgoraService.leaveChannel(
-                        widget.roomName, widget.uid, widget.userName);
+                        widget.roomName, widget.userName);
                     Navigator.pop(context);
                   },
                 ),
@@ -145,6 +135,37 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _controlButton({
+    required BuildContext context,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black.withOpacity(0.6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            offset: Offset(0, 4),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(
+          icon,
+          size: screenWidth * 0.1,
+          color: color,
+        ),
+        onPressed: onPressed,
       ),
     );
   }
@@ -165,8 +186,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
       ref.read(meetingUidProvider.notifier).state = tokenData['uid'] as int;
 
       await AgoraService.initializeAgora();
-      await AgoraService.startMeeting(
-          widget.roomName, widget.uid, widget.userName);
+      await AgoraService.joinOrStartMeeting(widget.roomName, widget.userName);
 
       ref.read(meetingJoinedProvider.notifier).state = true;
     } else {

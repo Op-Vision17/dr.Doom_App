@@ -1,4 +1,3 @@
-import 'package:doctor_doom/appui/MeetingIDscreen.dart';
 import 'package:doctor_doom/appui/Schedule.dart';
 import 'package:doctor_doom/appui/joinmeeting.dart';
 import 'package:doctor_doom/appui/profile.dart';
