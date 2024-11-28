@@ -133,7 +133,7 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
                 GestureDetector(
                   onTap: () => Navigator.of(context).push(PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) =>
-                        HomeScreen(),
+                        VideoCallScreen(),
                     transitionsBuilder:
                         (context, animation, secondaryAnimation, child) {
                       const begin = Offset(1.0, 0.0); // Slide in from the right

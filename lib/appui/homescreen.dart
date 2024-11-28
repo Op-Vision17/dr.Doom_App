@@ -113,28 +113,7 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     ActionButton(
                       label: "Schedule Now",
-                      onPressed: () {
-                        Navigator.of(context).push(PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  UniqueJoinMeetingPage(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const curve = Curves.easeInOut;
-
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: Offset(1.5, 0),
-                                end: Offset.zero,
-                              ).animate(CurvedAnimation(
-                                parent: animation,
-                                curve: curve,
-                              )),
-                              child: child,
-                            );
-                          },
-                        ));
-                      },
+                      onPressed: () {},
                     ),
                     const SizedBox(height: 20),
                     ActionButton(
@@ -143,7 +122,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.of(context).push(PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
-                                  CreateMeetingScreen(),
+                                  Createmeeting(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             const curve = Curves.easeInOut;
@@ -169,7 +148,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.of(context).push(PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
-                                  JoinMeetingScreen(),
+                                  UniqueJoinMeetingPage(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             const curve = Curves.easeInOut;
