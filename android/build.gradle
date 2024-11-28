@@ -16,11 +16,7 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 }
-buildscript {
-    dependencies {
-        classpath "com.android.tools.build:gradle:8.1.0" // Use the latest stable version
-    }
-}
+
 
 
 

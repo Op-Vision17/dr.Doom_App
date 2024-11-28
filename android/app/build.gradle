@@ -8,7 +8,6 @@ android {
     namespace = "com.example.doctor_doom" 
     namespace = "io.agora.rtm"
     compileSdk = 33
-    namespace = "io.agora.rtm"
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
