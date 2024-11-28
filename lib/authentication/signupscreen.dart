@@ -127,6 +127,7 @@ class SignupScreen extends ConsumerWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
+        fit: StackFit.expand,
         children: [
           Container(
             decoration: const BoxDecoration(

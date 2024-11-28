@@ -1,4 +1,4 @@
-import 'package:doctor_doom/appui/meetingscreen.dart';
+import 'package:doctor_doom/appui/meetingscreen2.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 final roomNameProvider = StateProvider<String>((ref) => '');
 final userNameProvider = StateProvider<String>((ref) => '');
+final tokenprovider = StateProvider<String>((ref) => '');
 
 class JoinMeetingScreen extends ConsumerWidget {
   int generateUuid3Digits() {
@@ -15,28 +16,11 @@ class JoinMeetingScreen extends ConsumerWidget {
     return (hash.abs() % 900 + 100);
   }
 
-  // Future<void> joinmeeting(BuildContext context, WidgetRef ref) async {
-  //   final roomname = ref.read(roomNameProvider);
-  //   final tokendata = await fetchAgoraToken(roomname);
-  //   if (tokendata == null || tokendata.isEmpty) {
-  //     throw Exception('Token fetch failed');
-  //   }
-
-  //   Navigator.pushReplacement(
-  //     context,
-  //     MaterialPageRoute(
-  //         builder: (context) => VideoScreen(
-  //               appId: '2f3131394cc6417b91aa93cfde567a37',
-  //               channelName: roomname,
-  //               token: tokendata['token'],
-  //             )),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final roomName = ref.watch(roomNameProvider);
     final userName = ref.watch(userNameProvider);
+    final token = ref.watch(tokenProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -76,16 +60,27 @@ class JoinMeetingScreen extends ConsumerWidget {
                   border: OutlineInputBorder(),
                 ),
               ),
+              SizedBox(height: 16),
+              TextField(
+                onChanged: (value) {
+                  ref.read(tokenProvider.notifier).state = value;
+                },
+                decoration: InputDecoration(
+                  labelText: 'Meeting ID',
+                  border: OutlineInputBorder(),
+                ),
+              ),
               SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => MeetingScreen(
+                        builder: (context) => Meetingscreen2(
                               roomName: roomName,
                               userName: userName,
                               uid: generateUuid3Digits(),
+                              token: token,
                             )),
                   );
                 },

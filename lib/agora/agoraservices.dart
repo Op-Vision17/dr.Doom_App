@@ -53,20 +53,23 @@ class AgoraService {
     }
   }
 
-  static Future<void> joinChannel(String roomName, String username) async {
+  static Future<void> startMeeting(
+      String roomName, int uid, String username) async {
     if (_engine == null) {
-      print("Error: _engine is not initialized.");
       throw Exception("Engine not initialized");
     }
 
     try {
-      await createMember(username, 0, roomName);
-      Map<String, dynamic>? tokendata = await fetchAgoraToken(roomName);
+      // Create member
+      await createMember(username, uid, roomName);
 
-      if (tokendata == null) {
+      // Fetch token dynamically
+      Map<String, dynamic>? tokendata = await fetchAgoraToken(roomName);
+      if (tokendata == null || tokendata['token'] == null) {
         throw Exception("Token generation failed");
       }
 
+      // Join channel with the fetched token
       await _engine!.joinChannel(
         token: tokendata['token'],
         channelId: roomName,
@@ -79,8 +82,35 @@ class AgoraService {
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
         ),
       );
+      print("Successfully started the meeting in room: $roomName");
     } catch (e) {
-      print("Error joining channel: $e");
+      print("Error in startMeeting: $e");
+    }
+  }
+
+  static Future<void> joinMeeting(
+      String roomName, int uid, String username, String token) async {
+    if (_engine == null) {
+      throw Exception("Engine not initialized");
+    }
+
+    try {
+      // Join channel using the token provided by the user
+      await _engine!.joinChannel(
+        token: token,
+        channelId: roomName,
+        uid: uid,
+        options: ChannelMediaOptions(
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+        ),
+      );
+      print("Successfully joined the meeting in room: $roomName");
+    } catch (e) {
+      print("Error in joinMeeting: $e");
     }
   }
 
@@ -119,7 +149,7 @@ class AgoraService {
     }
   }
 
-  static Widget localVideo() {
+  static Widget localVideo(int uuid) {
     if (_engine != null) {
       return AgoraVideoView(
         controller: VideoViewController(

@@ -1,5 +1,4 @@
 import 'package:doctor_doom/agora/agoraservices.dart';
-import 'package:doctor_doom/agora/apiwork.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,29 +11,30 @@ final meetingJoinedProvider = StateProvider<bool>((ref) => false);
 final tokenProvider = StateProvider<String>((ref) => '');
 final meetingUidProvider = StateProvider<int?>((ref) => null);
 
-class MeetingScreen extends ConsumerStatefulWidget {
+class Meetingscreen2 extends ConsumerStatefulWidget {
   final String roomName;
   final String userName;
   final int uid;
+  final token;
 
-  const MeetingScreen({
+  const Meetingscreen2({
     required this.roomName,
     required this.userName,
     required this.uid,
+    required this.token,
     Key? key,
   }) : super(key: key);
 
   @override
-  _MeetingScreenState createState() => _MeetingScreenState();
+  _Meetingscreen2State createState() => _Meetingscreen2State();
 }
 
-class _MeetingScreenState extends ConsumerState<MeetingScreen> {
+class _Meetingscreen2State extends ConsumerState<Meetingscreen2> {
   @override
   Widget build(BuildContext context) {
     final muteStatus = ref.watch(muteProvider);
     final cameraStatus = ref.watch(cameraProvider);
     final meetingJoined = ref.watch(meetingJoinedProvider);
-    final meetingid = ref.watch(tokenProvider);
 
     if (!meetingJoined) {
       _initializeMeeting(context);
@@ -53,7 +53,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    'ID: ${meetingid}',
+                    'ID: ${widget.token}',
                     style: TextStyle(fontSize: 12, color: Colors.white70),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -61,7 +61,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
                 IconButton(
                   icon: Icon(Icons.copy, size: 16, color: Colors.white),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: meetingid));
+                    Clipboard.setData(ClipboardData(text: widget.token));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Token copied to clipboard')),
                     );
@@ -146,22 +146,9 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
 
   Future<void> _initializeMeeting(BuildContext context) async {
     if (await AgoraService.checkPermissions()) {
-      final tokenData = await fetchAgoraToken(widget.roomName);
-      if (tokenData == null ||
-          tokenData['token'] == null ||
-          tokenData['uid'] == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to get Agora token or UID')),
-        );
-        return;
-      }
-
-      ref.read(tokenProvider.notifier).state = tokenData['token']!;
-      ref.read(meetingUidProvider.notifier).state = tokenData['uid'] as int;
-
       await AgoraService.initializeAgora();
-      await AgoraService.startMeeting(
-          widget.roomName, widget.uid, widget.userName);
+      await AgoraService.joinMeeting(
+          widget.roomName, widget.uid, widget.userName, widget.token);
 
       ref.read(meetingJoinedProvider.notifier).state = true;
     } else {
