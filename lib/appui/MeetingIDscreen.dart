@@ -1,45 +1,42 @@
-import 'package:doctor_doom/appui/videocallScreen.dart';
+import 'package:doctor_doom/appui/homescreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:doctor_doom/appui/videocallScreen.dart';
 
-class UniqueJoinMeetingPage extends StatefulWidget {
+// Providers
+final meetingIdControllerProvider = Provider((ref) => TextEditingController());
+final isMicOnProvider = StateProvider<bool>((ref) => true);
+final isVideoOnProvider = StateProvider<bool>((ref) => true);
+
+class UniqueJoinMeetingPage extends ConsumerWidget {
   @override
-  _UniqueJoinMeetingPageState createState() => _UniqueJoinMeetingPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Access providers
+    final meetingIdController = ref.watch(meetingIdControllerProvider);
+    final isMicOn = ref.watch(isMicOnProvider);
+    final isVideoOn = ref.watch(isVideoOnProvider);
 
-class _UniqueJoinMeetingPageState extends State<UniqueJoinMeetingPage> {
-  final TextEditingController meetingIdController = TextEditingController();
-  bool isMicOn = true; // Default mic state
-  bool isVideoOn = true; // Default video state
+    void joinMeeting() {
+      final meetingId = meetingIdController.text.trim();
+      if (meetingId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter a valid Meeting ID'),
+          ),
+        );
+        return;
+      }
 
-  @override
-  void dispose() {
-    meetingIdController.dispose();
-    super.dispose();
-  }
-
-  void joinMeeting(BuildContext context) {
-    final meetingId = meetingIdController.text.trim();
-    if (meetingId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid Meeting ID'),
+        SnackBar(
+          content: Text(
+            'Joining meeting with ID: $meetingId\nMic: ${isMicOn ? 'On' : 'Off'}, Video: ${isVideoOn ? 'On' : 'Off'}',
+          ),
         ),
       );
-      return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Joining meeting with ID: $meetingId\nMic: ${isMicOn ? 'On' : 'Off'}, Video: ${isVideoOn ? 'On' : 'Off'}',
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -86,7 +83,7 @@ class _UniqueJoinMeetingPageState extends State<UniqueJoinMeetingPage> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.2),
-                    hintText: 'Enter Meeting ID',
+                    hintText: 'Enter Meeting Room no.',
                     hintStyle: const TextStyle(color: Colors.white70),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -108,9 +105,7 @@ class _UniqueJoinMeetingPageState extends State<UniqueJoinMeetingPage> {
                     Switch(
                       value: isMicOn,
                       onChanged: (value) {
-                        setState(() {
-                          isMicOn = value;
-                        });
+                        ref.read(isMicOnProvider.notifier).state = value;
                       },
                       activeColor: Colors.green,
                     ),
@@ -127,9 +122,7 @@ class _UniqueJoinMeetingPageState extends State<UniqueJoinMeetingPage> {
                     Switch(
                       value: isVideoOn,
                       onChanged: (value) {
-                        setState(() {
-                          isVideoOn = value;
-                        });
+                        ref.read(isVideoOnProvider.notifier).state = value;
                       },
                       activeColor: Colors.green,
                     ),
@@ -140,7 +133,7 @@ class _UniqueJoinMeetingPageState extends State<UniqueJoinMeetingPage> {
                 GestureDetector(
                   onTap: () => Navigator.of(context).push(PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) =>
-                        VideoCallScreen(),
+                        HomeScreen(),
                     transitionsBuilder:
                         (context, animation, secondaryAnimation, child) {
                       const begin = Offset(1.0, 0.0); // Slide in from the right

@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  # agora_rtc_engine: ^6.3.2
   agora_rtc_engine: ^6.3.2
   animated_splash_screen: ^1.3.0
   cupertino_icons: ^1.0.8

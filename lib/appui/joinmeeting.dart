@@ -1,3 +1,4 @@
+import 'package:doctor_doom/appui/homescreen.dart';
 import 'package:doctor_doom/appui/videocallScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,7 +56,7 @@ class JoinMeetingScreen extends ConsumerWidget {
                   print('Room: $roomName, User: $userName');
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => VideoCallScreen()),
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
                   );
                 },
                 child: Text('Join'),
