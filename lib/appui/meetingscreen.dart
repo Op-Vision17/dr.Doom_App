@@ -2,17 +2,15 @@ import 'package:doctor_doom/agora/agoraservices.dart';
 import 'package:doctor_doom/agora/apiwork.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:agora_rtm/agora_rtm.dart';
 
-// Providers to manage room name, user name, mute status, camera status, meeting status, token, and meeting uid
 final roomNameProvider = StateProvider<String>((ref) => '');
 final userNameProvider = StateProvider<String>((ref) => '');
-final muteProvider = StateProvider<bool>((ref) => false); // Mute/unmute audio
-final cameraProvider = StateProvider<bool>((ref) => false); // Camera on/off
-final meetingJoinedProvider =
-    StateProvider<bool>((ref) => false); // Meeting joined status
-final tokenProvider = StateProvider<String>((ref) => ''); // Store token
-final meetingUidProvider =
-    StateProvider<int?>((ref) => null); // Store meeting UID
+final muteProvider = StateProvider<bool>((ref) => false);
+final cameraProvider = StateProvider<bool>((ref) => false);
+final meetingJoinedProvider = StateProvider<bool>((ref) => false);
+final tokenProvider = StateProvider<String>((ref) => '');
+final meetingUidProvider = StateProvider<int?>((ref) => null);
 
 class MeetingScreen extends ConsumerStatefulWidget {
   final String roomName;
@@ -31,95 +29,104 @@ class MeetingScreen extends ConsumerStatefulWidget {
 }
 
 class _MeetingScreenState extends ConsumerState<MeetingScreen> {
-  bool _isMuted = false;
-  bool _isCameraOff = false;
+  late AgoraRtmClient _rtmClient;
+  AgoraRtmChannel? _rtmChannel; // Nullable Agora RTM channel
+  final List<String> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeChat();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final token = ref.watch(tokenProvider);
     final muteStatus = ref.watch(muteProvider);
     final cameraStatus = ref.watch(cameraProvider);
     final meetingJoined = ref.watch(meetingJoinedProvider);
-    final meetingUid = ref.watch(meetingUidProvider);
 
-    // Check if the meeting has already been joined, if not, initialize it
     if (!meetingJoined) {
       _initializeMeeting(context);
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Meeting: ${widget.roomName}')),
+      appBar: AppBar(
+        title: Text('Meeting: ${widget.roomName}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat),
+            onPressed: () => _showChatDialog(context),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
             child: Container(
-              color: Colors.black, // Placeholder for video stream
+              color: const Color.fromARGB(255, 37, 37, 37),
               child: meetingJoined
                   ? Stack(
                       children: [
-                        AgoraService.remoteVideo(), // Display remote video view
+                        // Remote video spans the entire screen
+                        Positioned.fill(
+                          child: AgoraService.remoteVideo(),
+                        ),
+                        // Local video at the bottom-right corner
                         Positioned(
-                          top: 10,
+                          bottom: 10,
                           right: 10,
                           child: Container(
                             width: 120,
                             height: 160,
                             color: Colors.black.withOpacity(0.5),
-                            child: AgoraService
-                                .localVideo(), // Display local video view
+                            child: AgoraService.localVideo(),
                           ),
                         ),
                       ],
                     )
-                  : Center(
+                  : const Center(
                       child: CircularProgressIndicator(),
                     ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Mute/Unmute Audio
-              IconButton(
-                icon: Icon(
-                  muteStatus ? Icons.mic_off : Icons.mic,
-                  color: muteStatus
-                      ? Colors.red
-                      : const Color.fromARGB(255, 0, 0, 0),
+          // Button bar
+          Container(
+            color: Colors.black87,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    muteStatus ? Icons.mic_off : Icons.mic,
+                    color: muteStatus ? Colors.red : Colors.white,
+                  ),
+                  onPressed: () async {
+                    ref.read(muteProvider.notifier).state = !muteStatus;
+                    await AgoraService.muteLocalAudio(!muteStatus);
+                  },
                 ),
-                onPressed: () async {
-                  ref.read(muteProvider.notifier).state = !muteStatus;
-                  await AgoraService.muteLocalAudio(
-                      !muteStatus); // Update mute status
-                },
-              ),
-              // Turn Camera On/Off
-              IconButton(
-                icon: Icon(
-                  cameraStatus ? Icons.videocam_off : Icons.videocam,
-                  color: cameraStatus
-                      ? Colors.red
-                      : const Color.fromARGB(255, 0, 0, 0),
+                IconButton(
+                  icon: Icon(
+                    cameraStatus ? Icons.videocam_off : Icons.videocam,
+                    color: cameraStatus ? Colors.red : Colors.white,
+                  ),
+                  onPressed: () async {
+                    ref.read(cameraProvider.notifier).state = !cameraStatus;
+                    await AgoraService.muteLocalVideo(cameraStatus);
+                  },
                 ),
-                onPressed: () async {
-                  ref.read(cameraProvider.notifier).state = !cameraStatus;
-                  if (cameraStatus) {
-                    await AgoraService.muteLocalVideo(true); // Disable video
-                  } else {
-                    await AgoraService.muteLocalVideo(false); // Enable video
-                  }
-                },
-              ),
-              // Leave Meeting
-              IconButton(
-                icon: Icon(Icons.exit_to_app, color: Colors.red),
-                onPressed: () async {
-                  await AgoraService.leaveChannel(
-                      widget.roomName, widget.userName);
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+                IconButton(
+                  icon: const Icon(Icons.exit_to_app, color: Colors.red),
+                  onPressed: () async {
+                    await _leaveChat();
+                    await AgoraService.leaveChannel(
+                        widget.roomName, widget.userName);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -127,32 +134,139 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
   }
 
   Future<void> _initializeMeeting(BuildContext context) async {
-    // Check for camera and microphone permissions
     if (await AgoraService.checkPermissions()) {
       final tokenData = await fetchAgoraToken(widget.roomName);
       if (tokenData == null ||
           tokenData['token'] == null ||
           tokenData['uid'] == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to get Agora token or UID')),
+          const SnackBar(content: Text('Failed to get Agora token or UID')),
         );
         return;
       }
 
-      // Set the token and uid in the Riverpod providers
       ref.read(tokenProvider.notifier).state = tokenData['token']!;
       ref.read(meetingUidProvider.notifier).state = tokenData['uid'] as int;
 
-      // Initialize Agora service and join the channel
       await AgoraService.initializeAgora();
       await AgoraService.joinChannel(widget.roomName, widget.userName);
 
-      // Set meeting joined status in Riverpod
       ref.read(meetingJoinedProvider.notifier).state = true;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Camera or microphone permissions denied')),
+        const SnackBar(
+            content: Text('Camera or microphone permissions denied')),
       );
     }
+  }
+
+  Future<void> _initializeChat() async {
+    try {
+      // Initialize RTM client
+      _rtmClient = await AgoraRtmClient.createInstance("YOUR_AGORA_APP_ID");
+
+      _rtmClient.onMessageReceived = (AgoraRtmMessage message, String peerId) {
+        print("Private message from $peerId: ${message.text}");
+      };
+
+      _rtmClient.onConnectionStateChanged = (int state, int reason) {
+        if (state == 5) {
+          print("RTM connection lost, logging out.");
+          _rtmClient.logout();
+        }
+      };
+
+      // Log in to RTM
+      await _rtmClient.login(null, widget.userName);
+
+      // Join the RTM channel for group chat
+      _rtmChannel = await _rtmClient.createChannel(widget.roomName);
+      if (_rtmChannel == null) {
+        throw Exception("Failed to create RTM channel");
+      }
+
+      _rtmChannel!.onMessageReceived =
+          (AgoraRtmMessage message, AgoraRtmMember member) {
+        setState(() {
+          _messages.add("${member.userId}: ${message.text}");
+        });
+      };
+
+      await _rtmChannel!.join();
+      print("Joined RTM channel: ${widget.roomName}");
+    } catch (e) {
+      print("Error initializing RTM: $e");
+    }
+  }
+
+  Future<void> _leaveChat() async {
+    try {
+      if (_rtmChannel != null) {
+        await _rtmChannel!.leave();
+        print("Left RTM channel: ${widget.roomName}");
+      }
+      await _rtmClient.logout();
+      print("Logged out of RTM");
+    } catch (e) {
+      print("Error leaving RTM: $e");
+    }
+  }
+
+  void _sendMessage(String text) async {
+    if (_rtmChannel == null) return;
+
+    try {
+      await _rtmChannel!.sendMessage(AgoraRtmMessage.fromText(text));
+      setState(() {
+        _messages.add("You: $text");
+      });
+    } catch (e) {
+      print("Error sending message: $e");
+    }
+  }
+
+  void _showChatDialog(BuildContext context) {
+    final TextEditingController messageController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                return ListTile(title: Text(_messages[index]));
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: messageController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter message',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: () {
+                    final text = messageController.text;
+                    if (text.isNotEmpty) {
+                      _sendMessage(text);
+                      messageController.clear();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

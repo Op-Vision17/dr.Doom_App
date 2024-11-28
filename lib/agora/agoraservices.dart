@@ -4,23 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class AgoraService {
-  static RtcEngine? _engine; // Changed to nullable
-  static const String appId =
-      "2f3131394cc6417b91aa93cfde567a37"; // Replace with your Agora App ID
+  static RtcEngine? _engine;
+  static const String appId = "2f3131394cc6417b91aa93cfde567a37";
   static int? _remoteUid;
-  static String roomName = ""; // To store the current room name
+  static String roomName = "";
 
-  // Method to check permissions for camera and microphone
   static Future<bool> checkPermissions() async {
     final cameraStatus = await Permission.camera.request();
     final micStatus = await Permission.microphone.request();
     return cameraStatus.isGranted && micStatus.isGranted;
   }
 
-  // Method to initialize the Agora RTC engine
   static Future<void> initializeAgora() async {
     try {
-      _engine = await createAgoraRtcEngine(); // Initialize the engine
+      _engine = await createAgoraRtcEngine();
       await _engine!.initialize(
         RtcEngineContext(
           appId: appId,
@@ -29,7 +26,7 @@ class AgoraService {
       );
 
       await _engine!.enableVideo();
-      await _engine!.startPreview(); // Start the local video preview
+      await _engine!.startPreview();
 
       _engine!.registerEventHandler(
         RtcEngineEventHandler(
@@ -56,7 +53,6 @@ class AgoraService {
     }
   }
 
-  // Method to join the Agora channel with dynamic token and room name
   static Future<void> joinChannel(String roomName, String username) async {
     if (_engine == null) {
       print("Error: _engine is not initialized.");
@@ -88,7 +84,6 @@ class AgoraService {
     }
   }
 
-  // Method to leave the Agora channel and remove the member from the room
   static Future<void> leaveChannel(String roomName, String username) async {
     if (_engine == null) {
       print("Error: _engine is not initialized.");
@@ -103,7 +98,6 @@ class AgoraService {
     }
   }
 
-  // Method to mute/unmute local audio stream
   static Future<void> muteLocalAudio(bool mute) async {
     if (_engine == null) {
       print("Error: _engine is not initialized.");
@@ -116,30 +110,29 @@ class AgoraService {
     }
   }
 
-  // Method to mute/unmute local video stream
   static Future<void> muteLocalVideo(bool mute) async {
-    if (_engine == null) {
-      print("Error: _engine is not initialized.");
-      return;
-    }
-    try {
+    if (_engine != null) {
       await _engine!.muteLocalVideoStream(mute);
-    } catch (e) {
-      print("Error muting video: $e");
+      if (!mute) {
+        await _engine!
+            .startPreview(); // Ensure preview restarts when video is unmuted
+      }
     }
   }
 
-  // Method to display the local video stream
   static Widget localVideo() {
-    return AgoraVideoView(
-      controller: VideoViewController.local(
-        rtcEngine: _engine!,
-        canvas: VideoCanvas(uid: 0), // 0 for local user
-      ),
-    );
+    if (_engine != null) {
+      return AgoraVideoView(
+        controller: VideoViewController(
+          rtcEngine: _engine!,
+          canvas: VideoCanvas(uid: 0),
+        ),
+      );
+    } else {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
-  // Method to display the remote video stream
   static Widget remoteVideo() {
     if (_remoteUid != null) {
       return AgoraVideoView(
@@ -157,7 +150,6 @@ class AgoraService {
     }
   }
 
-  // Dispose method to clean up when leaving the screen or app
   static Future<void> dispose() async {
     if (_engine == null) {
       print("Error: _engine is not initialized.");
@@ -167,7 +159,7 @@ class AgoraService {
     try {
       await _engine!.leaveChannel();
       await _engine!.release();
-      _engine = null; // Set to null after disposal to prevent further access
+      _engine = null;
     } catch (e) {
       print("Error during dispose: $e");
     }

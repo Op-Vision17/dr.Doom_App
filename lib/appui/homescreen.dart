@@ -125,7 +125,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.of(context).push(PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
-                                  Createmeeting(),
+                                  Startmeeting(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             const curve = Curves.easeInOut;
@@ -151,7 +151,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.of(context).push(PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
-                                  UniqueJoinMeetingPage(),
+                                  JoinMeetingScreen(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             const curve = Curves.easeInOut;
