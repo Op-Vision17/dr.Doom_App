@@ -21,6 +21,8 @@ class MeetingScreen extends ConsumerStatefulWidget {
     required this.userName,
     required this.uid,
     Key? key,
+    required bool isVideoOn,
+    required bool isMicOn,
   }) : super(key: key);
 
   @override
