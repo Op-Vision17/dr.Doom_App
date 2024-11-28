@@ -21,6 +21,8 @@ class MeetingScreen extends ConsumerStatefulWidget {
     required this.userName,
     required this.uid,
     Key? key,
+    required bool isVideoOn,
+    required bool isMicOn,
   }) : super(key: key);
 
   @override
@@ -39,7 +41,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Room Name: ${widget.roomName}')),
+      appBar: AppBar(title: Text('Meeting: ${widget.roomName}')),
       body: Column(
         children: [
           Expanded(
@@ -48,18 +50,19 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
               child: meetingJoined
                   ? Stack(
                       children: [
+                        // Remote video spans the entire screen
                         Positioned.fill(
                           child: AgoraService.remoteVideo(),
                         ),
+                        // Local video at the bottom-right corner
                         Positioned(
                           bottom: 10,
                           right: 10,
                           child: Container(
-                            width: 150,
-                            height: 200,
+                            width: 120,
+                            height: 160,
                             color: Colors.black.withOpacity(0.5),
-                            child: Positioned.fill(
-                                child: AgoraService.localVideo()),
+                            child: AgoraService.localVideo(),
                           ),
                         ),
                       ],
@@ -69,6 +72,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
                     ),
             ),
           ),
+          // Button bar
           Container(
             color: Colors.black87,
             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -92,7 +96,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
                   ),
                   onPressed: () async {
                     ref.read(cameraProvider.notifier).state = !cameraStatus;
-                    await AgoraService.muteLocalVideo(!cameraStatus);
+                    await AgoraService.muteLocalVideo(cameraStatus);
                   },
                 ),
                 IconButton(

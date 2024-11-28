@@ -114,7 +114,8 @@ class AgoraService {
     if (_engine != null) {
       await _engine!.muteLocalVideoStream(mute);
       if (!mute) {
-        await _engine!.startPreview();
+        await _engine!
+            .startPreview(); // Ensure preview restarts when video is unmuted
       }
     }
   }
@@ -145,7 +146,6 @@ class AgoraService {
       return const Text(
         'Please wait for remote user to join',
         textAlign: TextAlign.center,
-        style: TextStyle(color: Color.fromRGBO(255, 255, 255, 1), fontSize: 30),
       );
     }
   }
