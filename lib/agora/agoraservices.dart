@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class AgoraService {
-  static late final RtcEngine _engine;
+  static RtcEngine? _engine; // Changed to nullable
   static const String appId =
-      "<-- Insert app Id -->"; // Replace with your Agora App ID
+      "2f3131394cc6417b91aa93cfde567a37"; // Replace with your Agora App ID
   static int? _remoteUid;
   static String roomName = ""; // To store the current room name
 
@@ -19,91 +19,124 @@ class AgoraService {
 
   // Method to initialize the Agora RTC engine
   static Future<void> initializeAgora() async {
-    // Create an instance of RtcEngine using createAgoraRtcEngine
-    _engine = await createAgoraRtcEngine();
+    try {
+      _engine = await createAgoraRtcEngine(); // Initialize the engine
+      await _engine!.initialize(
+        RtcEngineContext(
+          appId: appId,
+          channelProfile: ChannelProfileType.channelProfileCommunication,
+        ),
+      );
 
-    // Initialize RtcEngine and set the channel profile to communication
-    await _engine.initialize(
-      RtcEngineContext(
-        appId: appId,
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-      ),
-    );
+      await _engine!.enableVideo();
+      await _engine!.startPreview(); // Start the local video preview
 
-    // Enable the video module
-    await _engine.enableVideo();
-
-    // Start the local video preview
-    await _engine.startPreview();
-
-    // Register event handler for various events
-    _engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          print("Local user ${connection.localUid} joined channel");
-        },
-        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          print("Remote user $remoteUid joined channel");
-          _remoteUid = remoteUid;
-        },
-        onUserOffline: (RtcConnection connection, int remoteUid,
-            UserOfflineReasonType reason) {
-          print("Remote user $remoteUid left channel");
-          _remoteUid = null;
-        },
-        // Corrected onLeaveChannel handler with two parameters
-        onLeaveChannel: (RtcConnection connection, RtcStats stats) {
-          print("Left channel with stats: $stats");
-        },
-      ),
-    );
+      _engine!.registerEventHandler(
+        RtcEngineEventHandler(
+          onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+            print("Local user ${connection.localUid} joined channel");
+          },
+          onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+            print("Remote user $remoteUid joined channel");
+            _remoteUid = remoteUid;
+          },
+          onUserOffline: (RtcConnection connection, int remoteUid,
+              UserOfflineReasonType reason) {
+            print("Remote user $remoteUid left channel");
+            _remoteUid = null;
+          },
+          onLeaveChannel: (RtcConnection connection, RtcStats stats) {
+            print("Left channel with stats: $stats");
+          },
+        ),
+      );
+    } catch (e) {
+      print("Error initializing Agora: $e");
+      rethrow;
+    }
   }
 
   // Method to join the Agora channel with dynamic token and room name
   static Future<void> joinChannel(String roomName, String username) async {
-    // First, create or fetch the member for the room
-    await createMember(username, 0, roomName);
-
-    // Generate the token from the API
-    String? token = await fetchAgoraToken(roomName);
-
-    if (token == null) {
-      print("Error: Token generation failed");
-      return;
+    if (_engine == null) {
+      print("Error: _engine is not initialized.");
+      throw Exception("Engine not initialized");
     }
 
-    // Join the channel with the token
-    await _engine.joinChannel(
-      token: token, // Passing token as named parameter
-      channelId: roomName, // Pass roomName as the channelId
-      uid: 0, // 0 means the engine will automatically assign a user ID
-      options: ChannelMediaOptions(
-        autoSubscribeAudio: true,
-        autoSubscribeVideo: true,
-        publishCameraTrack: true,
-        publishMicrophoneTrack: true,
-        clientRoleType: ClientRoleType.clientRoleBroadcaster,
-      ),
-    );
+    try {
+      await createMember(username, 0, roomName);
+      Map<String, dynamic>? tokendata = await fetchAgoraToken(roomName);
+
+      if (tokendata == null) {
+        throw Exception("Token generation failed");
+      }
+
+      await _engine!.joinChannel(
+        token: tokendata['token'],
+        channelId: roomName,
+        uid: tokendata['uid'],
+        options: ChannelMediaOptions(
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+        ),
+      );
+    } catch (e) {
+      print("Error joining channel: $e");
+    }
   }
 
   // Method to leave the Agora channel and remove the member from the room
   static Future<void> leaveChannel(String roomName, String username) async {
-    // Call API to delete the member from the server
-    await leaveMeeting(username, 0, roomName);
+    if (_engine == null) {
+      print("Error: _engine is not initialized.");
+      throw Exception("Engine not initialized");
+    }
 
-    // Leave the Agora channel
-    await _engine.leaveChannel();
+    try {
+      await leaveMeeting(username, 0, roomName);
+      await _engine!.leaveChannel();
+    } catch (e) {
+      print("Error leaving channel: $e");
+    }
   }
 
   // Method to mute/unmute local audio stream
   static Future<void> muteLocalAudio(bool mute) async {
-    await _engine.muteLocalAudioStream(mute);
+    if (_engine == null) {
+      print("Error: _engine is not initialized.");
+      return;
+    }
+    try {
+      await _engine!.muteLocalAudioStream(mute);
+    } catch (e) {
+      print("Error muting audio: $e");
+    }
   }
 
   // Method to mute/unmute local video stream
   static Future<void> muteLocalVideo(bool mute) async {
-    await _engine.muteLocalVideoStream(mute);
+    if (_engine == null) {
+      print("Error: _engine is not initialized.");
+      return;
+    }
+    try {
+      await _engine!.muteLocalVideoStream(mute);
+    } catch (e) {
+      print("Error muting video: $e");
+    }
+  }
+
+  // Method to display the local video stream
+  static Widget localVideo() {
+    return AgoraVideoView(
+      controller: VideoViewController.local(
+        rtcEngine: _engine!,
+        canvas: VideoCanvas(uid: 0), // 0 for local user
+      ),
+    );
   }
 
   // Method to display the remote video stream
@@ -111,7 +144,7 @@ class AgoraService {
     if (_remoteUid != null) {
       return AgoraVideoView(
         controller: VideoViewController.remote(
-          rtcEngine: _engine,
+          rtcEngine: _engine!,
           canvas: VideoCanvas(uid: _remoteUid),
           connection: RtcConnection(channelId: roomName),
         ),
@@ -126,7 +159,17 @@ class AgoraService {
 
   // Dispose method to clean up when leaving the screen or app
   static Future<void> dispose() async {
-    await _engine.leaveChannel(); // Leave the channel
-    await _engine.release(); // Release resources
+    if (_engine == null) {
+      print("Error: _engine is not initialized.");
+      return;
+    }
+
+    try {
+      await _engine!.leaveChannel();
+      await _engine!.release();
+      _engine = null; // Set to null after disposal to prevent further access
+    } catch (e) {
+      print("Error during dispose: $e");
+    }
   }
 }

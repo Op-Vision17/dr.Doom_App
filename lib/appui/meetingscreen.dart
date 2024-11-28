@@ -17,10 +17,12 @@ final meetingUidProvider =
 class MeetingScreen extends ConsumerStatefulWidget {
   final String roomName;
   final String userName;
+  final int uid;
 
   const MeetingScreen({
     required this.roomName,
     required this.userName,
+    required this.uid,
     Key? key,
   }) : super(key: key);
 
@@ -33,57 +35,17 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
   bool _isCameraOff = false;
 
   @override
-  void initState() {
-    super.initState();
-    // Initialize roomName and userName in providers
-    ref.read(roomNameProvider.notifier).state = widget.roomName;
-    ref.read(userNameProvider.notifier).state = widget.userName;
-
-    // Initialize the meeting on screen load
-    _initializeMeeting();
-  }
-
-  Future<void> _initializeMeeting() async {
-    // Check for camera and microphone permissions
-    if (await AgoraService.checkPermissions()) {
-      final token = await fetchAgoraToken(widget.roomName);
-      if (token == null || token.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to get Agora token')),
-        );
-        return;
-      }
-
-      // Set the token in the Riverpod provider
-      ref.read(tokenProvider.notifier).state = token;
-
-      // Initialize Agora service and join the channel
-      await AgoraService.initializeAgora();
-      await AgoraService.joinChannel(widget.roomName, widget.userName);
-
-      // Set meeting joined status in Riverpod
-      ref.read(meetingJoinedProvider.notifier).state = true;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Camera or microphone permissions denied')),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    // Leave the Agora channel when the screen is disposed
-    AgoraService.leaveChannel(widget.roomName, widget.userName);
-  }
-
-  @override
   Widget build(BuildContext context) {
     final token = ref.watch(tokenProvider);
     final muteStatus = ref.watch(muteProvider);
     final cameraStatus = ref.watch(cameraProvider);
     final meetingJoined = ref.watch(meetingJoinedProvider);
-    final meetingUid = ref.watch(meetingUidProvider); // Access the meeting UID
+    final meetingUid = ref.watch(meetingUidProvider);
+
+    // Check if the meeting has already been joined, if not, initialize it
+    if (!meetingJoined) {
+      _initializeMeeting(context);
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text('Meeting: ${widget.roomName}')),
@@ -93,10 +55,25 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
             child: Container(
               color: Colors.black, // Placeholder for video stream
               child: meetingJoined
-                  ? AgoraService.remoteVideo() // Display remote video view
+                  ? Stack(
+                      children: [
+                        AgoraService.remoteVideo(), // Display remote video view
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            width: 120,
+                            height: 160,
+                            color: Colors.black.withOpacity(0.5),
+                            child: AgoraService
+                                .localVideo(), // Display local video view
+                          ),
+                        ),
+                      ],
+                    )
                   : Center(
-                      child:
-                          CircularProgressIndicator()), // Show loading while joining
+                      child: CircularProgressIndicator(),
+                    ),
             ),
           ),
           Row(
@@ -106,7 +83,9 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
               IconButton(
                 icon: Icon(
                   muteStatus ? Icons.mic_off : Icons.mic,
-                  color: muteStatus ? Colors.red : Colors.white,
+                  color: muteStatus
+                      ? Colors.red
+                      : const Color.fromARGB(255, 0, 0, 0),
                 ),
                 onPressed: () async {
                   ref.read(muteProvider.notifier).state = !muteStatus;
@@ -118,7 +97,9 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
               IconButton(
                 icon: Icon(
                   cameraStatus ? Icons.videocam_off : Icons.videocam,
-                  color: cameraStatus ? Colors.red : Colors.white,
+                  color: cameraStatus
+                      ? Colors.red
+                      : const Color.fromARGB(255, 0, 0, 0),
                 ),
                 onPressed: () async {
                   ref.read(cameraProvider.notifier).state = !cameraStatus;
@@ -143,5 +124,35 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _initializeMeeting(BuildContext context) async {
+    // Check for camera and microphone permissions
+    if (await AgoraService.checkPermissions()) {
+      final tokenData = await fetchAgoraToken(widget.roomName);
+      if (tokenData == null ||
+          tokenData['token'] == null ||
+          tokenData['uid'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to get Agora token or UID')),
+        );
+        return;
+      }
+
+      // Set the token and uid in the Riverpod providers
+      ref.read(tokenProvider.notifier).state = tokenData['token']!;
+      ref.read(meetingUidProvider.notifier).state = tokenData['uid'] as int;
+
+      // Initialize Agora service and join the channel
+      await AgoraService.initializeAgora();
+      await AgoraService.joinChannel(widget.roomName, widget.userName);
+
+      // Set meeting joined status in Riverpod
+      ref.read(meetingJoinedProvider.notifier).state = true;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Camera or microphone permissions denied')),
+      );
+    }
   }
 }
