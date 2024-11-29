@@ -174,6 +174,8 @@ class Joinmeeting2 extends ConsumerWidget {
                               token: tokenData['token'],
                               uid: tokenData['uid'],
                               userName: userName,
+                              isCameraMuted: isVideoOn,
+                              isMicMuted: isMicOn,
                             ),
                           ),
                         );

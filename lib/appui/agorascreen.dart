@@ -8,6 +8,8 @@ class AgoraScreen extends StatefulWidget {
   final String channelName;
   final int uid;
   final String userName;
+  final bool isMicMuted;
+  final bool isCameraMuted;
 
   const AgoraScreen({
     required this.appId,
@@ -15,6 +17,8 @@ class AgoraScreen extends StatefulWidget {
     required this.channelName,
     required this.uid,
     required this.userName,
+    required this.isMicMuted,
+    required this.isCameraMuted,
   });
 
   @override
@@ -23,17 +27,20 @@ class AgoraScreen extends StatefulWidget {
 
 class _AgoraScreenState extends State<AgoraScreen> {
   late RtcEngine _agoraEngine;
-  bool _isMicMuted = false;
-  bool _isCameraMuted = false;
   Map<int, String?> remoteUsers = {};
   late int localUid;
 
-  double _localVideoX = 10.0; // Position of the local video container
+  bool isMicMuted = false;
+  bool isCameraMuted = false;
+
+  double _localVideoX = 10.0;
   double _localVideoY = 10.0;
 
   @override
   void initState() {
     super.initState();
+    isMicMuted = widget.isMicMuted;
+    isCameraMuted = widget.isCameraMuted;
     initAgora();
   }
 
@@ -53,12 +60,10 @@ class _AgoraScreenState extends State<AgoraScreen> {
           setState(() {
             localUid = uid;
           });
-          print("Joined channel successfully: UID = $uid");
           createMember(widget.userName, widget.uid, widget.channelName);
         },
         onUserJoined:
             (RtcConnection connection, int remoteUid, int elapsed) async {
-          print("Remote user joined: UID = $remoteUid");
           String? memberName =
               await fetchMemberDetails(remoteUid, widget.channelName);
           setState(() {
@@ -69,7 +74,6 @@ class _AgoraScreenState extends State<AgoraScreen> {
         },
         onUserOffline: (RtcConnection connection, int remoteUid,
             UserOfflineReasonType reason) {
-          print("Remote user offline: UID = $remoteUid");
           setState(() {
             remoteUsers.remove(remoteUid);
           });
@@ -86,20 +90,10 @@ class _AgoraScreenState extends State<AgoraScreen> {
         clientRoleType: ClientRoleType.clientRoleBroadcaster,
       ),
     );
-  }
 
-  Future<void> toggleMic() async {
-    setState(() {
-      _isMicMuted = !_isMicMuted;
-    });
-    await _agoraEngine.muteLocalAudioStream(_isMicMuted);
-  }
-
-  Future<void> toggleCamera() async {
-    setState(() {
-      _isCameraMuted = !_isCameraMuted;
-    });
-    await _agoraEngine.muteLocalVideoStream(_isCameraMuted);
+    // Set the mic and camera mute status according to the initial values
+    await _agoraEngine.muteLocalAudioStream(isMicMuted);
+    await _agoraEngine.muteLocalVideoStream(isCameraMuted);
   }
 
   @override
@@ -115,11 +109,10 @@ class _AgoraScreenState extends State<AgoraScreen> {
       appBar: AppBar(title: Text(widget.channelName)),
       body: Stack(
         children: [
-          // Remote Users Video Views in a Grid
           GridView.builder(
-            padding: EdgeInsets.only(top: 170), // Space for the local video
+            padding: EdgeInsets.only(top: 170),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Set the number of columns in the grid
+              crossAxisCount: 3,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
@@ -135,7 +128,8 @@ class _AgoraScreenState extends State<AgoraScreen> {
                       style: TextStyle(color: Colors.white),
                     ),
                     Container(
-                      height: 150,
+                      height: 180,
+                      width: double.infinity,
                       child: remoteUsers[remoteUid] != null
                           ? AgoraVideoView(
                               controller: VideoViewController.remote(
@@ -147,16 +141,13 @@ class _AgoraScreenState extends State<AgoraScreen> {
                             )
                           : Container(
                               color: Colors.grey,
-                              child: Center(child: Text("No Video")),
-                            ),
+                              child: Center(child: Text("No Video"))),
                     ),
                   ],
                 ),
               );
             },
           ),
-
-          // Local Video View (Draggable)
           Positioned(
             top: _localVideoY,
             left: _localVideoX,
@@ -167,46 +158,75 @@ class _AgoraScreenState extends State<AgoraScreen> {
                   _localVideoY = details.localPosition.dy;
                 });
               },
-              child: Container(
-                width: 150,
-                height: 150,
-                color: Colors.black,
-                child: AgoraVideoView(
-                  controller: VideoViewController(
-                    rtcEngine: _agoraEngine,
-                    canvas: VideoCanvas(uid: 0),
-                  ),
-                ),
-              ),
+              child: isCameraMuted
+                  ? Container(
+                      width: 150,
+                      height: 150,
+                      color: Colors.black,
+                      child: Center(
+                        child: Text(
+                          widget.userName,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      width: 150,
+                      height: 150,
+                      color: Colors.black,
+                      child: AgoraVideoView(
+                        controller: VideoViewController(
+                          rtcEngine: _agoraEngine,
+                          canvas: VideoCanvas(uid: 0),
+                        ),
+                      ),
+                    ),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          IconButton(
-            icon: Icon(_isMicMuted ? Icons.mic_off : Icons.mic),
-            onPressed: toggleMic,
-          ),
-          IconButton(
-            icon: Icon(_isCameraMuted ? Icons.videocam_off : Icons.videocam),
-            onPressed: toggleCamera,
-          ),
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () async {
-              // Leave the Agora channel when exiting
-              await _agoraEngine.leaveChannel();
-
-              // Optionally release resources
-              await _agoraEngine.release();
-
-              // Pop the screen and return to the previous screen
-              Navigator.pop(context);
-            },
-          ),
-        ],
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: Icon(isMicMuted ? Icons.mic_off : Icons.mic),
+              onPressed: () async {
+                setState(() {
+                  isMicMuted = !isMicMuted;
+                });
+                await _agoraEngine.muteLocalAudioStream(isMicMuted);
+              },
+              color: Colors.blue,
+            ),
+            IconButton(
+              icon: Icon(isCameraMuted ? Icons.videocam_off : Icons.videocam),
+              onPressed: () async {
+                setState(() {
+                  isCameraMuted = !isCameraMuted;
+                });
+                await _agoraEngine.muteLocalVideoStream(isCameraMuted);
+              },
+              color: Colors.blue,
+            ),
+            IconButton(
+              icon: Icon(Icons.exit_to_app),
+              onPressed: () async {
+                await _agoraEngine.leaveChannel();
+                await _agoraEngine.release();
+                Navigator.pop(context);
+              },
+              color: Colors.red,
+            ),
+          ],
+        ),
       ),
     );
   }
