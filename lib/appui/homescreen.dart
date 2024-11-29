@@ -1,7 +1,6 @@
 import 'package:doctor_doom/appui/Schedule.dart';
-import 'package:doctor_doom/appui/joinmeeting.dart';
+import 'package:doctor_doom/appui/joinmeeting2.dart';
 import 'package:doctor_doom/appui/profile.dart';
-import 'package:doctor_doom/appui/startmeeting.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:flutter/material.dart';
@@ -151,13 +150,14 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     ActionButton(
-                      label: "Start Meeting",
+                      label: "Join Meeting",
                       onPressed: () {
                         Navigator.of(context).push(PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
-                                  Startmeeting(),
+                                  Joinmeeting2(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             const curve = Curves.easeInOut;
@@ -191,45 +191,6 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 20),
-                    ActionButton(
-                      label: "Join Meeting",
-                      onPressed: () {
-                        Navigator.of(context).push(PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  JoinMeetingScreen(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const curve = Curves.easeInOut;
-
-                            return Stack(
-                              children: [
-                                SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: Offset(1.5, 0),
-                                    end: Offset.zero,
-                                  ).animate(CurvedAnimation(
-                                    parent: animation,
-                                    curve: curve,
-                                  )),
-                                  child: Container(color: Colors.blue),
-                                ),
-                                SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: Offset(1.0, 0),
-                                    end: Offset.zero,
-                                  ).animate(CurvedAnimation(
-                                    parent: animation,
-                                    curve: curve,
-                                  )),
-                                  child: child,
-                                ),
-                              ],
-                            );
-                          },
-                        ));
-                      },
-                    ),
                   ],
                 ),
               ),

@@ -7,9 +7,10 @@ class AgoraService {
   static RtcEngine? _engine;
   static const String appId = "2f3131394cc6417b91aa93cfde567a37";
   static List<int> remoteUids = [];
-
   static String roomName = "";
   static int? _localUid; // Store the UID fetched dynamically
+  static bool isVideoMuted = false; // Track local video mute status
+  static bool isAudioMuted = false; // Track local audio mute status
 
   // Check for camera and microphone permissions
   static Future<bool> checkPermissions() async {
@@ -133,6 +134,7 @@ class AgoraService {
     }
     try {
       await _engine!.muteLocalAudioStream(mute);
+      isAudioMuted = mute;
     } catch (e) {
       print("Error muting audio: $e");
     }
@@ -142,6 +144,7 @@ class AgoraService {
   static Future<void> muteLocalVideo(bool mute) async {
     if (_engine != null) {
       await _engine!.muteLocalVideoStream(mute);
+      isVideoMuted = mute;
       if (!mute) {
         await _engine!.startPreview();
       }
@@ -149,21 +152,59 @@ class AgoraService {
   }
 
   // Local video using fetched UID
-  static Widget localVideo() {
+  static Widget localVideo(String username) {
     if (_engine != null && _localUid != null) {
+      if (isVideoMuted) {
+        return Container(
+          alignment: Alignment.center,
+          color: const Color.fromARGB(255, 31, 31, 31),
+          child: Text(
+            username,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: const Color.fromARGB(255, 255, 255, 255),
+            ),
+          ),
+        );
+      }
       return AgoraVideoView(
         controller: VideoViewController(
           rtcEngine: _engine!,
-          canvas: VideoCanvas(uid: 0), // Use fetched UID
+          canvas: VideoCanvas(uid: 0),
         ),
       );
     } else {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+          child: CircularProgressIndicator(
+        color: Colors.white,
+      ));
     }
   }
 
   // Remote video
   static Widget remoteVideos() {
+    if (remoteUids.isEmpty) {
+      return Center(
+        child: Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.blueAccent,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          child: Text(
+            "No remote users in the meeting",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      );
+    }
+
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2, // Number of videos per row

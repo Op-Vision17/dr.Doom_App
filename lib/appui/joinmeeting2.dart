@@ -1,40 +1,50 @@
+import 'dart:convert';
+import 'package:doctor_doom/appui/agorascreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:doctor_doom/appui/videocallScreen.dart';
 
-// Providers
-final meetingIdControllerProvider = Provider((ref) => TextEditingController());
+import 'package:http/http.dart' as http; // Required for fetchAgoraToken()
+
+// State Providers
+final roomNameProvider = StateProvider<String>((ref) => '');
+final userNameProvider = StateProvider<String>((ref) => '');
 final isMicOnProvider = StateProvider<bool>((ref) => true);
 final isVideoOnProvider = StateProvider<bool>((ref) => true);
 
-class UniqueJoinMeetingPage extends ConsumerWidget {
+// Predefined function to fetch token
+Future<Map<String, dynamic>?> fetchAgoraToken(String roomName) async {
+  const String apiUrl = 'https://agora-8ojc.onrender.com/get_token/';
+
+  try {
+    final response = await http.get(
+      Uri.parse('$apiUrl?channel=$roomName'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final token = data['token'];
+      final int uid = data['uid'];
+      return {'token': token, 'uid': uid};
+    } else {
+      print('Error: ${response.body}');
+      return null;
+    }
+  } catch (e) {
+    print('Failed to fetch Agora token: $e');
+    return null;
+  }
+}
+
+class Joinmeeting2 extends ConsumerWidget {
+  const Joinmeeting2({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Access providers
-    final meetingIdController = ref.watch(meetingIdControllerProvider);
+    final roomName = ref.watch(roomNameProvider);
+    final userName = ref.watch(userNameProvider);
     final isMicOn = ref.watch(isMicOnProvider);
     final isVideoOn = ref.watch(isVideoOnProvider);
-
-    void joinMeeting() {
-      final meetingId = meetingIdController.text.trim();
-      if (meetingId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter a valid Meeting ID'),
-          ),
-        );
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Joining meeting with ID: $meetingId\nMic: ${isMicOn ? 'On' : 'Off'}, Video: ${isVideoOn ? 'On' : 'Off'}',
-          ),
-        ),
-      );
-    }
 
     return Scaffold(
       body: Stack(
@@ -49,7 +59,6 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
           Container(
             color: Colors.black.withOpacity(0.6),
           ),
-          // Main Content
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -75,14 +84,16 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
                   textAlign: TextAlign.start,
                 ),
                 const SizedBox(height: 30),
-                // Meeting ID Input
+                // Room Name Input
                 TextField(
-                  controller: meetingIdController,
+                  onChanged: (value) {
+                    ref.read(roomNameProvider.notifier).state = value;
+                  },
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.2),
-                    hintText: 'Enter Meeting Room no.',
+                    hintText: 'Enter Room Name',
                     hintStyle: const TextStyle(color: Colors.white70),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -92,8 +103,28 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
                   keyboardType: TextInputType.text,
                   textInputAction: TextInputAction.done,
                 ),
-                const SizedBox(height: 30),
-
+                const SizedBox(height: 20),
+                // User Name Input
+                TextField(
+                  onChanged: (value) {
+                    ref.read(userNameProvider.notifier).state = value;
+                  },
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.2),
+                    hintText: 'Enter Your Name',
+                    hintStyle: const TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  keyboardType: TextInputType.text,
+                  textInputAction: TextInputAction.done,
+                ),
+                const SizedBox(height: 20),
+                // Mic Toggle
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -110,7 +141,7 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
                     ),
                   ],
                 ),
-                // Toggle for Video
+                // Video Toggle
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -128,27 +159,36 @@ class UniqueJoinMeetingPage extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 30),
-                // Join Button
+                // Join Meeting Button
                 GestureDetector(
-                  onTap: () => Navigator.of(context).push(PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        VideoCallScreen(),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                      const begin = Offset(1.0, 0.0); // Slide in from the right
-                      const end = Offset.zero;
-                      const curve = Curves.easeInOut;
-
-                      var tween = Tween(begin: begin, end: end)
-                          .chain(CurveTween(curve: curve));
-                      var offsetAnimation = animation.drive(tween);
-
-                      return SlideTransition(
-                        position: offsetAnimation,
-                        child: child,
+                  onTap: () async {
+                    if (userName.isNotEmpty && roomName.isNotEmpty) {
+                      final tokenData = await fetchAgoraToken(roomName);
+                      if (tokenData != null) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AgoraScreen(
+                              appId: '2f3131394cc6417b91aa93cfde567a37',
+                              channelName: roomName,
+                              token: tokenData['token'],
+                              uid: tokenData['uid'],
+                              userName: userName,
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Failed to fetch Agora token')),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please fill all fields')),
                       );
-                    },
-                  )),
+                    }
+                  },
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(

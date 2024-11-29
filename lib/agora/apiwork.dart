@@ -67,7 +67,7 @@ Future<bool> createMember(String name, int uid, String roomName) async {
     );
 
     if (response.statusCode == 200) {
-      print('Member created successfully: ${response.body}');
+      print('Member created successfully: ${response.body},....$uid');
       return true;
     } else {
       print('Error: ${response.body}');
@@ -79,7 +79,7 @@ Future<bool> createMember(String name, int uid, String roomName) async {
   }
 }
 
-Future<String?> fetchMemberDetails(String uid, String roomName) async {
+Future<String?> fetchMemberDetails(int uid, String roomName) async {
   final url = Uri.parse(
       'https://agora-8ojc.onrender.com/get_member/?UID=$uid&room_name=$roomName');
 
@@ -89,7 +89,7 @@ Future<String?> fetchMemberDetails(String uid, String roomName) async {
       final data = jsonDecode(response.body);
       return data['name'];
     } else {
-      print('Failed to load member details');
+      print('Failed to load member details of uid $uid');
       return null;
     }
   } catch (e) {
