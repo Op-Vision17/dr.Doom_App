@@ -91,7 +91,6 @@ class _AgoraScreenState extends State<AgoraScreen> {
       ),
     );
 
-    // Set the mic and camera mute status according to the initial values
     await _agoraEngine.muteLocalAudioStream(isMicMuted);
     await _agoraEngine.muteLocalVideoStream(isCameraMuted);
   }
@@ -194,39 +193,100 @@ class _AgoraScreenState extends State<AgoraScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            IconButton(
-              icon: Icon(isMicMuted ? Icons.mic_off : Icons.mic),
-              onPressed: () async {
+            // Mic Button
+            GestureDetector(
+              onTap: () async {
                 setState(() {
                   isMicMuted = !isMicMuted;
                 });
                 await _agoraEngine.muteLocalAudioStream(isMicMuted);
               },
-              color: Colors.blue,
+              child: _buildButton(
+                icon: isMicMuted ? Icons.mic_off : Icons.mic,
+                isActive: !isMicMuted,
+              ),
             ),
-            IconButton(
-              icon: Icon(isCameraMuted ? Icons.videocam_off : Icons.videocam),
-              onPressed: () async {
+            // Camera Button
+            GestureDetector(
+              onTap: () async {
                 setState(() {
                   isCameraMuted = !isCameraMuted;
                 });
                 await _agoraEngine.muteLocalVideoStream(isCameraMuted);
               },
-              color: Colors.blue,
+              child: _buildButton(
+                icon: isCameraMuted ? Icons.videocam_off : Icons.videocam,
+                isActive: !isCameraMuted,
+              ),
             ),
-            IconButton(
-              icon: Icon(Icons.exit_to_app),
-              onPressed: () async {
+            // Chat Button
+            GestureDetector(
+              onTap: () {
+                // Implement the chat functionality here
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text("Chat Feature"),
+                    content: Text("Chat functionality will be implemented."),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text("Close"),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: _buildButton(
+                icon: Icons.chat,
+                isActive: true,
+              ),
+            ),
+            // Exit Button
+            GestureDetector(
+              onTap: () async {
                 await _agoraEngine.leaveChannel();
                 await _agoraEngine.release();
                 Navigator.pop(context);
               },
-              color: Colors.red,
+              child: _buildButton(
+                icon: Icons.exit_to_app,
+                isActive: true,
+                color: Colors.red,
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildButton({
+    required IconData icon,
+    required bool isActive,
+    Color color = Colors.white,
+  }) {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isActive ? Colors.white : Colors.grey,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 5.0,
+          ),
+        ],
+      ),
+      child: Icon(
+        icon,
+        size: 35,
+        color: isActive ? Colors.black : Colors.white,
       ),
     );
   }
