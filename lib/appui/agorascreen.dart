@@ -1,8 +1,11 @@
 import 'package:doctor_doom/agora/apiwork.dart';
+import 'package:doctor_doom/chat/chatprovider.dart';
+import 'package:doctor_doom/chat/chatscreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 
-class AgoraScreen extends StatefulWidget {
+class AgoraScreen extends ConsumerStatefulWidget {
   final String appId;
   final String token;
   final String channelName;
@@ -25,7 +28,7 @@ class AgoraScreen extends StatefulWidget {
   _AgoraScreenState createState() => _AgoraScreenState();
 }
 
-class _AgoraScreenState extends State<AgoraScreen> {
+class _AgoraScreenState extends ConsumerState<AgoraScreen> {
   late RtcEngine _agoraEngine;
   Map<int, String?> remoteUsers = {};
   late int localUid;
@@ -54,6 +57,16 @@ class _AgoraScreenState extends State<AgoraScreen> {
         .setChannelProfile(ChannelProfileType.channelProfileCommunication);
     await _agoraEngine.enableVideo();
 
+    await _agoraEngine.joinChannel(
+      token: widget.token,
+      channelId: widget.channelName,
+      uid: widget.uid,
+      options: ChannelMediaOptions(
+        channelProfile: ChannelProfileType.channelProfileCommunication,
+        clientRoleType: ClientRoleType.clientRoleBroadcaster,
+      ),
+    );
+
     _agoraEngine.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection connection, int uid) {
@@ -81,16 +94,6 @@ class _AgoraScreenState extends State<AgoraScreen> {
       ),
     );
 
-    await _agoraEngine.joinChannel(
-      token: widget.token,
-      channelId: widget.channelName,
-      uid: widget.uid,
-      options: ChannelMediaOptions(
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-        clientRoleType: ClientRoleType.clientRoleBroadcaster,
-      ),
-    );
-
     await _agoraEngine.muteLocalAudioStream(isMicMuted);
     await _agoraEngine.muteLocalVideoStream(isCameraMuted);
   }
@@ -102,9 +105,15 @@ class _AgoraScreenState extends State<AgoraScreen> {
     super.dispose();
   }
 
+  // New function to clear chat messages before leaving the meeting
+  void _clearChatMessages() {
+    ref
+        .read(messagesProvider.notifier)
+        .removeAllMessages(); // Clear messages from provider
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Fetch screen dimensions using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
@@ -116,10 +125,10 @@ class _AgoraScreenState extends State<AgoraScreen> {
           GridView.builder(
             padding: EdgeInsets.only(top: 20),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Two videos per row
+              crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 3 / 4, // Entire container aspect ratio
+              childAspectRatio: 3 / 4,
             ),
             itemCount: remoteUsers.keys.length,
             itemBuilder: (context, index) {
@@ -131,11 +140,10 @@ class _AgoraScreenState extends State<AgoraScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Video Container (3:4 proportion minus the name area)
                     Expanded(
-                      flex: 3, // Allocates 3 parts of the total height
+                      flex: 3,
                       child: AspectRatio(
-                        aspectRatio: 3 / 4, // Video in 3:4 aspect ratio
+                        aspectRatio: 3 / 4,
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.grey[900],
@@ -160,9 +168,8 @@ class _AgoraScreenState extends State<AgoraScreen> {
                         ),
                       ),
                     ),
-                    // Name Container (1 part of the total height)
                     Expanded(
-                      flex: 1, // Allocates 1 part of the total height
+                      flex: 1,
                       child: Container(
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
@@ -183,7 +190,6 @@ class _AgoraScreenState extends State<AgoraScreen> {
             },
           ),
 
-          // Local video view, adjustable size
           Positioned(
             top: _localVideoY,
             left: _localVideoX,
@@ -213,8 +219,8 @@ class _AgoraScreenState extends State<AgoraScreen> {
                       ),
                     )
                   : Container(
-                      width: screenWidth * 0.4, // Adjust width dynamically
-                      height: screenHeight * 0.3, // Adjust height dynamically
+                      width: screenWidth * 0.4,
+                      height: screenHeight * 0.3,
                       color: Colors.black,
                       child: AgoraVideoView(
                         controller: VideoViewController(
@@ -261,21 +267,13 @@ class _AgoraScreenState extends State<AgoraScreen> {
             // Chat Button
             GestureDetector(
               onTap: () {
-                // Implement the chat functionality here
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text("Chat Feature"),
-                    content: Text("Chat functionality will be implemented."),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text("Close"),
-                      ),
-                    ],
-                  ),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                            username: widget.userName,
+                            channelname: widget.channelName,
+                          )),
                 );
               },
               child: _buildButton(
@@ -283,12 +281,15 @@ class _AgoraScreenState extends State<AgoraScreen> {
                 isActive: true,
               ),
             ),
-            // Exit Button
+            // Leave Meeting Button
             GestureDetector(
               onTap: () async {
+                // Clear chat messages before leaving
+                _clearChatMessages();
+
                 await _agoraEngine.leaveChannel();
                 await _agoraEngine.release();
-                Navigator.pop(context);
+                Navigator.pop(context); // Exit the meeting
               },
               child: _buildButton(
                 icon: Icons.exit_to_app,

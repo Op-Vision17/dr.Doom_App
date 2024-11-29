@@ -29,25 +29,24 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   agora_rtc_engine: ^6.3.2
-  # agora_rtm: ^1.5.9
   animated_splash_screen: ^1.3.0
   cupertino_icons: ^1.0.8
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.6.1
+  flutter_secure_storage: ^9.1.2
   google_fonts: ^6.2.1
-  http: ^1.2.2
-  lottie: ^3.1.3
-  page_transition: ^2.1.0
-  permission_handler: ^11.3.1
-  shared_preferences: ^2.3.3
   hive: ^2.0.4
   hive_flutter: ^1.1.0
-  path_provider: ^2.0.5
-  
-  uuid: ^4.5.1
-  flutter_secure_storage: ^9.1.2
+  http: ^1.2.2
   image_picker: ^1.1.2
+  lottie: ^3.1.3
+  page_transition: ^2.1.0
+  path_provider: ^2.0.5
+  permission_handler: ^11.3.1
+  shared_preferences: ^2.3.3
+  uuid: ^4.5.1
+  web_socket_channel: ^3.0.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.1
