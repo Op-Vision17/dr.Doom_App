@@ -104,11 +104,9 @@ class ScheduleMeetingScreen extends ConsumerWidget {
                         firstDate: DateTime.now(),
                         lastDate: DateTime(2100),
                       );
-                      if (pickedDate != null) {
-                        ref.read(meetingDateProvider.notifier).state =
-                            pickedDate;
-                      }
-                    },
+                      ref.read(meetingDateProvider.notifier).state =
+                          pickedDate;
+                                        },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 15, horizontal: 20),
