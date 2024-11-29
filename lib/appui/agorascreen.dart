@@ -104,49 +104,86 @@ class _AgoraScreenState extends State<AgoraScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Fetch screen dimensions using MediaQuery
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.channelName)),
       body: Stack(
         children: [
+          // Remote users video grid
           GridView.builder(
-            padding: EdgeInsets.only(top: 170),
+            padding: EdgeInsets.only(top: 20),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+              crossAxisCount: 2, // Two videos per row
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
+              childAspectRatio: 3 / 4, // Entire container aspect ratio
             ),
             itemCount: remoteUsers.keys.length,
             itemBuilder: (context, index) {
               int remoteUid = remoteUsers.keys.elementAt(index);
               return Container(
-                color: Colors.black,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: Column(
                   children: [
-                    Text(
-                      remoteUsers[remoteUid] ?? "Unknown User",
-                      style: TextStyle(color: Colors.white),
+                    // Video Container (3:4 proportion minus the name area)
+                    Expanded(
+                      flex: 3, // Allocates 3 parts of the total height
+                      child: AspectRatio(
+                        aspectRatio: 3 / 4, // Video in 3:4 aspect ratio
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[900],
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(8)),
+                          ),
+                          child: remoteUsers[remoteUid] != null
+                              ? AgoraVideoView(
+                                  controller: VideoViewController.remote(
+                                    rtcEngine: _agoraEngine,
+                                    canvas: VideoCanvas(uid: remoteUid),
+                                    connection: RtcConnection(
+                                        channelId: widget.channelName),
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    "No Video",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
-                    Container(
-                      height: 180,
-                      width: double.infinity,
-                      child: remoteUsers[remoteUid] != null
-                          ? AgoraVideoView(
-                              controller: VideoViewController.remote(
-                                rtcEngine: _agoraEngine,
-                                canvas: VideoCanvas(uid: remoteUid),
-                                connection: RtcConnection(
-                                    channelId: widget.channelName),
-                              ),
-                            )
-                          : Container(
-                              color: Colors.grey,
-                              child: Center(child: Text("No Video"))),
+                    // Name Container (1 part of the total height)
+                    Expanded(
+                      flex: 1, // Allocates 1 part of the total height
+                      child: Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[800],
+                          borderRadius:
+                              BorderRadius.vertical(bottom: Radius.circular(8)),
+                        ),
+                        child: Text(
+                          remoteUsers[remoteUid] ?? "Unknown User",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               );
             },
           ),
+
+          // Local video view, adjustable size
           Positioned(
             top: _localVideoY,
             left: _localVideoX,
@@ -159,8 +196,8 @@ class _AgoraScreenState extends State<AgoraScreen> {
               },
               child: isCameraMuted
                   ? Container(
-                      width: 150,
-                      height: 150,
+                      width: screenWidth * 0.4,
+                      height: screenHeight * 0.3,
                       color: Colors.black,
                       child: Center(
                         child: Text(
@@ -176,8 +213,8 @@ class _AgoraScreenState extends State<AgoraScreen> {
                       ),
                     )
                   : Container(
-                      width: 150,
-                      height: 150,
+                      width: screenWidth * 0.4, // Adjust width dynamically
+                      height: screenHeight * 0.3, // Adjust height dynamically
                       color: Colors.black,
                       child: AgoraVideoView(
                         controller: VideoViewController(
