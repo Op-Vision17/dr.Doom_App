@@ -1,8 +1,11 @@
 import 'package:doctor_doom/agora/apiwork.dart';
+import 'package:doctor_doom/chat/chatprovider.dart';
+import 'package:doctor_doom/chat/chatscreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 
-class AgoraScreen extends StatefulWidget {
+class AgoraScreen extends ConsumerStatefulWidget {
   final String appId;
   final String token;
   final String channelName;
@@ -25,7 +28,7 @@ class AgoraScreen extends StatefulWidget {
   _AgoraScreenState createState() => _AgoraScreenState();
 }
 
-class _AgoraScreenState extends State<AgoraScreen> {
+class _AgoraScreenState extends ConsumerState<AgoraScreen> {
   late RtcEngine _agoraEngine;
   Map<int, String?> remoteUsers = {};
   late int localUid;
@@ -54,6 +57,16 @@ class _AgoraScreenState extends State<AgoraScreen> {
         .setChannelProfile(ChannelProfileType.channelProfileCommunication);
     await _agoraEngine.enableVideo();
 
+    await _agoraEngine.joinChannel(
+      token: widget.token,
+      channelId: widget.channelName,
+      uid: widget.uid,
+      options: ChannelMediaOptions(
+        channelProfile: ChannelProfileType.channelProfileCommunication,
+        clientRoleType: ClientRoleType.clientRoleBroadcaster,
+      ),
+    );
+
     _agoraEngine.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection connection, int uid) {
@@ -81,16 +94,6 @@ class _AgoraScreenState extends State<AgoraScreen> {
       ),
     );
 
-    await _agoraEngine.joinChannel(
-      token: widget.token,
-      channelId: widget.channelName,
-      uid: widget.uid,
-      options: ChannelMediaOptions(
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-        clientRoleType: ClientRoleType.clientRoleBroadcaster,
-      ),
-    );
-
     await _agoraEngine.muteLocalAudioStream(isMicMuted);
     await _agoraEngine.muteLocalVideoStream(isCameraMuted);
   }
@@ -102,45 +105,58 @@ class _AgoraScreenState extends State<AgoraScreen> {
     super.dispose();
   }
 
+  // New function to clear chat messages before leaving the meeting
+  void _clearChatMessages() {
+    ref
+        .read(messagesProvider.notifier)
+        .removeAllMessages(); // Clear messages from provider
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Fetch screen dimensions using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.channelName)),
+      appBar: AppBar(
+        title: Text(
+          widget.channelName,
+          style: const TextStyle(color: Color(0xFFFFA500)),
+        ),
+        backgroundColor: const Color(0xFF1E1E1E),
+        iconTheme: const IconThemeData(color: Color(0xFFFFA500)),
+      ),
+      backgroundColor: const Color(0xFF2C2C2C), // Dark Grey Background
       body: Stack(
         children: [
           // Remote users video grid
           GridView.builder(
-            padding: EdgeInsets.only(top: 20),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Two videos per row
+            padding: const EdgeInsets.only(top: 20),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 3 / 4, // Entire container aspect ratio
+              childAspectRatio: 3 / 4,
             ),
             itemCount: remoteUsers.keys.length,
             itemBuilder: (context, index) {
               int remoteUid = remoteUsers.keys.elementAt(index);
               return Container(
                 decoration: BoxDecoration(
-                  color: Colors.black,
+                  color: const Color(0xFF1E1E1E), // Black for remote video
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   children: [
-                    // Video Container (3:4 proportion minus the name area)
                     Expanded(
-                      flex: 3, // Allocates 3 parts of the total height
+                      flex: 3,
                       child: AspectRatio(
-                        aspectRatio: 3 / 4, // Video in 3:4 aspect ratio
+                        aspectRatio: 3 / 4,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey[900],
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(8)),
+                            color: const Color(0xFF333333), // Darker Grey
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(8)),
                           ),
                           child: remoteUsers[remoteUid] != null
                               ? AgoraVideoView(
@@ -151,7 +167,7 @@ class _AgoraScreenState extends State<AgoraScreen> {
                                         channelId: widget.channelName),
                                   ),
                                 )
-                              : Center(
+                              : const Center(
                                   child: Text(
                                     "No Video",
                                     style: TextStyle(color: Colors.white),
@@ -160,19 +176,19 @@ class _AgoraScreenState extends State<AgoraScreen> {
                         ),
                       ),
                     ),
-                    // Name Container (1 part of the total height)
                     Expanded(
-                      flex: 1, // Allocates 1 part of the total height
+                      flex: 1,
                       child: Container(
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.grey[800],
-                          borderRadius:
-                              BorderRadius.vertical(bottom: Radius.circular(8)),
+                          color: const Color(0xFF1E1E1E), // Match footer grey
+                          borderRadius: const BorderRadius.vertical(
+                              bottom: Radius.circular(8)),
                         ),
                         child: Text(
                           remoteUsers[remoteUid] ?? "Unknown User",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 16),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -183,7 +199,6 @@ class _AgoraScreenState extends State<AgoraScreen> {
             },
           ),
 
-          // Local video view, adjustable size
           Positioned(
             top: _localVideoY,
             left: _localVideoX,
@@ -198,12 +213,12 @@ class _AgoraScreenState extends State<AgoraScreen> {
                   ? Container(
                       width: screenWidth * 0.4,
                       height: screenHeight * 0.3,
-                      color: Colors.black,
+                      color: const Color(0xFF1E1E1E), // Black for muted camera
                       child: Center(
                         child: Text(
                           widget.userName,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -213,8 +228,8 @@ class _AgoraScreenState extends State<AgoraScreen> {
                       ),
                     )
                   : Container(
-                      width: screenWidth * 0.4, // Adjust width dynamically
-                      height: screenHeight * 0.3, // Adjust height dynamically
+                      width: screenWidth * 0.4,
+                      height: screenHeight * 0.3,
                       color: Colors.black,
                       child: AgoraVideoView(
                         controller: VideoViewController(
@@ -232,99 +247,23 @@ class _AgoraScreenState extends State<AgoraScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Mic Button
-            GestureDetector(
-              onTap: () async {
-                setState(() {
-                  isMicMuted = !isMicMuted;
-                });
-                await _agoraEngine.muteLocalAudioStream(isMicMuted);
-              },
-              child: _buildButton(
-                icon: isMicMuted ? Icons.mic_off : Icons.mic,
-                isActive: !isMicMuted,
-              ),
-            ),
-            // Camera Button
-            GestureDetector(
-              onTap: () async {
-                setState(() {
-                  isCameraMuted = !isCameraMuted;
-                });
-                await _agoraEngine.muteLocalVideoStream(isCameraMuted);
-              },
-              child: _buildButton(
-                icon: isCameraMuted ? Icons.videocam_off : Icons.videocam,
-                isActive: !isCameraMuted,
-              ),
-            ),
-            // Chat Button
-            GestureDetector(
-              onTap: () {
-                // Implement the chat functionality here
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text("Chat Feature"),
-                    content: Text("Chat functionality will be implemented."),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text("Close"),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              child: _buildButton(
-                icon: Icons.chat,
-                isActive: true,
-              ),
-            ),
-            // Exit Button
-            GestureDetector(
-              onTap: () async {
-                await _agoraEngine.leaveChannel();
-                await _agoraEngine.release();
-                Navigator.pop(context);
-              },
-              child: _buildButton(
-                icon: Icons.exit_to_app,
-                isActive: true,
-                color: Colors.red,
-              ),
-            ),
+            _buildButton(icon: isMicMuted ? Icons.mic_off : Icons.mic),
+            _buildButton(
+                icon: isCameraMuted ? Icons.videocam_off : Icons.videocam),
+            _buildButton(icon: Icons.chat),
+            _buildButton(icon: Icons.exit_to_app, color: Colors.red),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildButton({
-    required IconData icon,
-    required bool isActive,
-    Color color = Colors.white,
-  }) {
-    return Container(
-      width: 70,
-      height: 70,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isActive ? Colors.white : Colors.grey,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black45,
-            blurRadius: 5.0,
-          ),
-        ],
-      ),
-      child: Icon(
-        icon,
-        size: 35,
-        color: isActive ? Colors.black : Colors.white,
-      ),
+  Widget _buildButton(
+      {required IconData icon, Color color = const Color(0xFFFFA500)}) {
+    return CircleAvatar(
+      radius: 35,
+      backgroundColor: const Color(0xFF333333),
+      child: Icon(icon, color: color),
     );
   }
 }
