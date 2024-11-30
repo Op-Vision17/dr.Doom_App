@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final emailProvider = StateProvider<String>((ref) => "");
@@ -206,8 +207,10 @@ class ResetPasswordScreen2 extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 14.0),
                         ),
                         child: isLoading
-                            ? const CircularProgressIndicator(
-                                color: Colors.black)
+                            ? LoadingAnimationWidget.threeArchedCircle(
+                                color: const Color.fromARGB(255, 240, 195, 69),
+                                size: 25,
+                              )
                             : const Text(
                                 "Reset",
                                 style: TextStyle(

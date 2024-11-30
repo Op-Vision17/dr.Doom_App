@@ -54,7 +54,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ClipPath(
             clipper: WaveClipper(),
             child: Container(
-              height: MediaQuery.of(context).size.height * 0.2,
+              height: MediaQuery.of(context).size.height * 0.15,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -72,16 +72,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     Text(
                       'Meeting: ${widget.channelname}',
                       style: GoogleFonts.poppins(
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFFFFA500), // Shiny orange
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 5),
                     Text(
                       'User: ${widget.username}',
                       style: GoogleFonts.poppins(
-                        fontSize: 16,
+                        fontSize: 14,
                         color: Colors.white,
                       ),
                     ),
@@ -94,7 +94,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(top: 145.0),
+              padding: const EdgeInsets.only(top: 100.0),
               child: Container(
                 decoration: BoxDecoration(
                   color: const Color(0xFF2C2C2C), // Dark Grey container
@@ -104,7 +104,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: const Color.fromARGB(255, 84, 84, 84)
+                          .withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -131,7 +132,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             child: Container(
                               margin: const EdgeInsets.symmetric(vertical: 6.0),
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 12.0, horizontal: 16.0),
+                                  vertical: 8.0, horizontal: 14.0),
                               decoration: BoxDecoration(
                                 color: isUserMessage
                                     ? const Color(0xFFFFA500) // Shiny orange
@@ -139,18 +140,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 borderRadius: BorderRadius.circular(12.0),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: const Color.fromARGB(255, 14, 14, 14)
+                                        .withOpacity(0.1),
                                     blurRadius: 4,
                                     offset: const Offset(2, 2),
                                   ),
                                 ],
                               ),
-                              child: Text(
-                                messageText,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: isUserMessage
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "~ ${username}", // Display the sender's username
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.black, // White username
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    messageText, // Display the message text
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );

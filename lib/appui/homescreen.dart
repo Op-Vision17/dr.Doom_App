@@ -44,37 +44,27 @@ class HomeScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Logo in the upper left corner
-                          Image.asset(
-                            "assets/doom_logo.png", // Replace with your logo image
-                            height: 70, // Adjust size as needed
-                            width: 90,
+                          IconButton(
+                            icon: const Icon(
+                              Icons.person_2_rounded,
+                              color: Color.fromARGB(255, 240, 176, 58),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ProfilePage()),
+                              );
+                            },
                           ),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.person_2_rounded,
-                                  color: Color.fromARGB(255, 240, 176, 58),
-                                ),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => ProfilePage()),
-                                  );
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.logout_rounded,
-                                  color: Color.fromARGB(255, 232, 156, 16),
-                                ),
-                                onPressed: () async {
-                                  await logout(context);
-                                },
-                              ),
-                            ],
+                          IconButton(
+                            icon: const Icon(
+                              Icons.logout_rounded,
+                              color: Color.fromARGB(255, 232, 156, 16),
+                            ),
+                            onPressed: () async {
+                              await logout(context);
+                            },
                           ),
                         ],
                       ),

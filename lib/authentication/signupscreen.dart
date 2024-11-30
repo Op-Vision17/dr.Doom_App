@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 final firstNameProvider = StateProvider<String>((ref) => "");
 final lastNameProvider = StateProvider<String>((ref) => "");
@@ -313,9 +314,9 @@ class SignupScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                         ),
                         child: isLoading
-                            ? const CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                            ? LoadingAnimationWidget.fourRotatingDots(
+                                color: const Color.fromARGB(255, 240, 195, 69),
+                                size: 45,
                               )
                             : Text(
                                 "Create Account",
