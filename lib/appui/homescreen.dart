@@ -23,10 +23,12 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
+          // Background Image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/homeui.png"),
+                image: AssetImage(
+                    "assets/homeui.png"), // Replace with your background image
                 fit: BoxFit.cover,
               ),
             ),
@@ -34,37 +36,27 @@ class HomeScreen extends StatelessWidget {
           Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 30.0, bottom: 20),
+                padding: const EdgeInsets.only(top: 20.0, bottom: 20),
                 child: Stack(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 15.0, right: 10.0),
+                      padding: const EdgeInsets.only(left: 10.0, right: 10.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Dr. Doom",
-                            style: GoogleFonts.kablammo(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: const Color.fromRGBO(202, 239, 184, 1),
-                              shadows: [
-                                Shadow(
-                                  color:
-                                      const Color.fromARGB(255, 188, 232, 190)
-                                          .withOpacity(0.5),
-                                  offset: const Offset(2, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.start,
+                          // Logo in the upper left corner
+                          Image.asset(
+                            "assets/doom_logo.png", // Replace with your logo image
+                            height: 70, // Adjust size as needed
+                            width: 90,
                           ),
                           Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.person_2_rounded,
-                                    color: Colors.white),
+                                icon: const Icon(
+                                  Icons.person_2_rounded,
+                                  color: Color.fromARGB(255, 240, 176, 58),
+                                ),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
@@ -74,8 +66,10 @@ class HomeScreen extends StatelessWidget {
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.logout_rounded,
-                                    color: Colors.white),
+                                icon: const Icon(
+                                  Icons.logout_rounded,
+                                  color: Color.fromARGB(255, 232, 156, 16),
+                                ),
                                 onPressed: () async {
                                   await logout(context);
                                 },
@@ -93,11 +87,11 @@ class HomeScreen extends StatelessWidget {
                 style: GoogleFonts.barrio(
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
-                  color: const Color.fromARGB(255, 255, 255, 255),
+                  color: const Color.fromARGB(255, 210, 167, 89),
                   shadows: [
                     Shadow(
-                      color: const Color.fromARGB(255, 160, 160, 160)
-                          .withOpacity(0.5),
+                      color: const Color(0xFF808080)
+                          .withOpacity(0.5), // Gray shadow
                       offset: const Offset(2, 2),
                       blurRadius: 4,
                     ),
@@ -215,12 +209,13 @@ class ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       width: double.infinity,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
+          backgroundColor:
+              const Color.fromARGB(255, 234, 167, 43), // Shiny Orange
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
           ),

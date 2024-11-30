@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:doctor_doom/authentication/resetpass.dart';
 import 'package:doctor_doom/authentication/signupscreen.dart';
-import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:doctor_doom/appui/homescreen.dart';
+import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:doctor_doom/services/user_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +25,7 @@ class LoginScreen extends ConsumerWidget {
   Future<void> login(WidgetRef ref) async {
     final email = ref.read(emailProvider);
     final password = ref.read(passwordProvider);
+
     if (!isEmailValid(email)) {
       ScaffoldMessenger.of(ref.context).showSnackBar(
         const SnackBar(content: Text("Please enter a valid email address!")),
@@ -35,11 +36,7 @@ class LoginScreen extends ConsumerWidget {
     ref.read(loadingProvider.notifier).state = true;
 
     const String url = "https://login-signup-docdoom.onrender.com/login/";
-
-    final body = {
-      "email": email,
-      "password": password,
-    };
+    final body = {"email": email, "password": password};
 
     try {
       final response = await http.post(
@@ -57,10 +54,9 @@ class LoginScreen extends ConsumerWidget {
         final user = data['user'];
 
         await saveToken(token);
-       
-       
+
         final userStorage = UserStorage();
-        await userStorage.saveUserData(user, token); 
+        await userStorage.saveUserData(user, token);
 
         ScaffoldMessenger.of(ref.context).showSnackBar(
           const SnackBar(content: Text("Login Successful!")),
@@ -94,88 +90,110 @@ class LoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final _obscurePassword = ref.watch(passwordVisibilityProvider);
     final isLoading = ref.watch(loadingProvider);
+
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      backgroundColor: const Color.fromARGB(255, 233, 201, 152),
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("assets/loginbackground.jpg"),
-                fit: BoxFit.cover,
+          // Gradient Background with Orange and Grey
+          ClipPath(
+            clipper: WaveClipper(),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.45,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF333333), // Dark Grey
+                    Color(0xFF1E1E1E), // Black
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: Center(
+                  child: Image.asset(
+                    'assets/doom_logo.png', // Your logo path
+                    width: 210, // Adjust the width as needed
+                    height: 200, // Adjust the height as needed
+                  ),
+                ),
               ),
             ),
           ),
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 50.0),
-                child: Text(
-                  "Dr. Doom",
-                  style: GoogleFonts.kablammo(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 0, 0, 0),
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.5),
-                        offset: const Offset(2, 2),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const Spacer(flex: 2),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+
+          // Grey Form Container moved higher
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Container(
+                  margin: const EdgeInsets.only(top: 150.0), // Adjusted margin
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(200, 255, 255, 255),
+                    color: Color(0xFF2C2C2C), // Dark Grey container
                     borderRadius: BorderRadius.circular(16.0),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(24.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'LOGIN',
+                      Text(
+                        "LOGIN",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 0, 0, 0),
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: const Color.fromARGB(
+                              255, 234, 157, 14), // Shiny Orange
                         ),
                       ),
                       const SizedBox(height: 20),
                       TextField(
-                        decoration: const InputDecoration(
+                        style: const TextStyle(
+                            color: Colors.white), // White text color
+                        decoration: InputDecoration(
                           labelText: "Email",
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(color: Colors.white),
+                          border: const OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.email,
+                              color: const Color.fromARGB(
+                                  255, 235, 164, 30)), // Orange Icon
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color(0xFFFFA500), width: 2.0),
+                          ),
                         ),
-                        keyboardType: TextInputType.emailAddress,
                         onChanged: (value) =>
                             ref.read(emailProvider.notifier).state = value,
                       ),
                       const SizedBox(height: 20),
                       TextField(
+                        obscureText: _obscurePassword,
+                        style: const TextStyle(
+                            color: Colors.white), // White text color
                         decoration: InputDecoration(
                           labelText: "Password",
+                          labelStyle: const TextStyle(color: Colors.white),
                           border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.lock,
+                              color: Color.fromARGB(
+                                  255, 221, 157, 37)), // Orange Icon
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
+                              color: const Color.fromARGB(
+                                  255, 215, 151, 32), // Orange Icon
                             ),
                             onPressed: () {
                               ref
@@ -183,55 +201,75 @@ class LoginScreen extends ConsumerWidget {
                                   .state = !_obscurePassword;
                             },
                           ),
-                        ),
-                        obscureText: _obscurePassword,
-                        onChanged: (value) =>
-                            ref.read(passwordProvider.notifier).state = value,
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              ref.context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const requesttokenscreen()),
-                            );
-                          },
-                          child: const Text(
-                            "Forgot Password?",
-                            style: TextStyle(color: Colors.blue),
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 222, 159, 41),
+                                width: 2.0),
                           ),
                         ),
+                        onChanged: (value) =>
+                            ref.read(passwordProvider.notifier).state = value,
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: isLoading ? null : () => login(ref),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(202, 239, 184, 1),
+                          backgroundColor: const Color.fromARGB(
+                              255, 232, 167, 48), // Shiny Orange Button
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14.0),
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
                         ),
                         child: isLoading
                             ? const CircularProgressIndicator(
                                 valueColor:
                                     AlwaysStoppedAnimation<Color>(Colors.white),
                               )
-                            : const Text(
+                            : Text(
                                 "Login",
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    color: Color.fromARGB(255, 0, 0, 0)),
+                                style: GoogleFonts.roboto(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
                               ),
                       ),
                       const SizedBox(height: 20),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              // Navigate to the Reset Password screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ResetPasswordScreen()),
+                              );
+                            },
+                            child: Text(
+                              "Forgot Password?",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: const Color(0xFFFFA500), // Orange Text
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("New user? "),
+                          Text(
+                            "New user? ",
+                            style: GoogleFonts.roboto(
+                              fontSize: 16,
+                              color:
+                                  const Color(0xFFFFA500), // Shiny Orange Text
+                            ),
+                          ),
                           GestureDetector(
                             onTap: () {
                               Navigator.push(
@@ -240,25 +278,47 @@ class LoginScreen extends ConsumerWidget {
                                     builder: (context) => const SignupScreen()),
                               );
                             },
-                            child: const Text(
+                            child: Text(
                               "Register",
-                              style: TextStyle(
-                                color: Colors.blue,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: const Color(
+                                    0xFFFFA500), // Shiny Orange Text
                                 decoration: TextDecoration.underline,
                               ),
                             ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 20),
+                      // Forgot Password Button aligned to the right
                     ],
                   ),
                 ),
               ),
-              const Spacer(flex: 3),
-            ],
+            ),
           ),
         ],
       ),
     );
+  }
+}
+
+// Custom Clipper for Gradient Wave
+class WaveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height - 50);
+    path.quadraticBezierTo(
+        size.width / 2, size.height, size.width, size.height - 50);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    return false;
   }
 }

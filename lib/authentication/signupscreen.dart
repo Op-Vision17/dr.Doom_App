@@ -1,8 +1,8 @@
+import 'dart:convert';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 final firstNameProvider = StateProvider<String>((ref) => "");
@@ -124,120 +124,167 @@ class SignupScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final obscurePassword = ref.watch(passwordVisibilityProvider);
     final isLoading = ref.watch(loadingProvider);
+
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      backgroundColor: const Color.fromARGB(255, 233, 201, 152),
       body: Stack(
-        fit: StackFit.expand,
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("assets/loginbackground.jpg"),
-                fit: BoxFit.cover,
+          // Gradient Background with Orange and Grey
+          ClipPath(
+            clipper: WaveClipper(),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.45,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF333333), // Dark Grey
+                    Color(0xFF1E1E1E), // Black
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: Image.asset(
+                  'assets/doom_logo.png', // Your logo path
+                  width: 190, // Adjust the width as needed
+                  height: 190, // Adjust the height as needed
+                ),
               ),
             ),
           ),
-          Column(
-            children: [
-              Padding(
-                  padding: const EdgeInsets.only(top: 50.0),
-                  child: Text(
-                    "Dr. Doom",
-                    style: GoogleFonts.kablammo(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: const Color.fromARGB(255, 0, 0, 0),
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.5),
-                          offset: const Offset(2, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  )),
-              const SizedBox(
-                height: 30,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+
+          // Grey Form Container moved higher
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Container(
+                  margin: const EdgeInsets.only(top: 150.0), // Adjusted margin
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(200, 255, 255, 255),
+                    color: Color(0xFF2C2C2C), // Dark Grey container
                     borderRadius: BorderRadius.circular(16.0),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(14.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'SIGNUP',
+                      Text(
+                        "SIGNUP",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 0, 0, 0),
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: const Color.fromARGB(
+                              255, 234, 157, 14), // Shiny Orange
                         ),
                       ),
                       const SizedBox(height: 20),
+                      // First Name Field
                       TextField(
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
                           labelText: "First Name",
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(color: Colors.white),
+                          border: const OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person,
+                              color: const Color.fromARGB(
+                                  255, 235, 164, 30)), // Orange Icon
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color(0xFFFFA500), width: 2.0),
+                          ),
                         ),
-                        keyboardType: TextInputType.name,
                         onChanged: (value) =>
                             ref.read(firstNameProvider.notifier).state = value,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
+                      // Last Name Field
                       TextField(
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
                           labelText: "Last Name",
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(color: Colors.white),
+                          border: const OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person,
+                              color: const Color.fromARGB(
+                                  255, 235, 164, 30)), // Orange Icon
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color(0xFFFFA500), width: 2.0),
+                          ),
                         ),
-                        keyboardType: TextInputType.name,
                         onChanged: (value) =>
                             ref.read(lastNameProvider.notifier).state = value,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
+                      // Email Field
                       TextField(
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
                           labelText: "Email",
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(color: Colors.white),
+                          border: const OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.email,
+                              color: const Color.fromARGB(
+                                  255, 235, 164, 30)), // Orange Icon
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color(0xFFFFA500), width: 2.0),
+                          ),
                         ),
-                        keyboardType: TextInputType.emailAddress,
                         onChanged: (value) =>
                             ref.read(emailProvider.notifier).state = value,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
+                      // Phone Number Field
                       TextField(
-                        decoration: const InputDecoration(
-                          labelText: "Phone No.",
-                          border: OutlineInputBorder(),
+                        keyboardType: TextInputType.phone,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: "Phone Number",
+                          labelStyle: const TextStyle(color: Colors.white),
+                          border: const OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.phone,
+                              color: const Color.fromARGB(
+                                  255, 235, 164, 30)), // Orange Icon
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color(0xFFFFA500), width: 2.0),
+                          ),
                         ),
                         onChanged: (value) => ref
                             .read(phoneNumberProvider.notifier)
                             .state = value,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
+                      // Password Field
                       TextField(
+                        obscureText: obscurePassword,
+                        style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: "Password",
+                          labelStyle: const TextStyle(color: Colors.white),
                           border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.lock,
+                              color: Color.fromARGB(
+                                  255, 221, 157, 37)), // Orange Icon
                           suffixIcon: IconButton(
                             icon: Icon(
                               obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
+                              color: const Color.fromARGB(
+                                  255, 215, 151, 32), // Orange Icon
                             ),
                             onPressed: () {
                               ref
@@ -245,8 +292,12 @@ class SignupScreen extends ConsumerWidget {
                                   .state = !obscurePassword;
                             },
                           ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 222, 159, 41),
+                                width: 2.0),
+                          ),
                         ),
-                        obscureText: obscurePassword,
                         onChanged: (value) =>
                             ref.read(passwordProvider.notifier).state = value,
                       ),
@@ -254,29 +305,35 @@ class SignupScreen extends ConsumerWidget {
                       ElevatedButton(
                         onPressed: isLoading ? null : () => signUp(ref),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(202, 239, 184, 1),
+                          backgroundColor: const Color.fromARGB(
+                              255, 232, 167, 48), // Shiny Orange Button
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14.0),
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
                         ),
                         child: isLoading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ),
+                            ? const CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               )
-                            : const Text(
+                            : Text(
                                 "Create Account",
-                                style: TextStyle(fontSize: 18),
+                                style: GoogleFonts.roboto(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
                               ),
                       ),
                       const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("Already have an account?"),
+                          const Text(
+                            "Already have an account?",
+                            style: TextStyle(color: Colors.white),
+                          ),
                           TextButton(
                             onPressed: () {
                               Navigator.push(
@@ -285,7 +342,10 @@ class SignupScreen extends ConsumerWidget {
                                     builder: (context) => const LoginScreen()),
                               );
                             },
-                            child: const Text("Login here"),
+                            child: const Text(
+                              "Login here",
+                              style: TextStyle(color: Colors.amber),
+                            ),
                           ),
                         ],
                       ),
@@ -293,10 +353,29 @@ class SignupScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
+  }
+}
+
+// Custom Clipper for Gradient Wave
+class WaveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height - 50);
+    path.quadraticBezierTo(
+        size.width / 2, size.height, size.width, size.height - 50);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    return false;
   }
 }
