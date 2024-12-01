@@ -21,14 +21,14 @@ class Splashscreen extends StatelessWidget {
                 flex: 3,
                 child: Center(
                   child: Lottie.asset(
-                    'assets/animations/Animation - 1732589897308.json',
+                    'assets/animations/Animation - 1732985040404.json',
                     fit: BoxFit.contain,
                     height: constraints.maxHeight * 0.4,
                   ),
                 ),
               ),
               Image.asset(
-                'assets/logo2.png',
+                'assets/doom_logo.png',
                 fit: BoxFit.contain,
                 height: constraints.maxHeight * 0.3,
               ),
@@ -55,7 +55,7 @@ class Splashscreen extends StatelessWidget {
       splashIconSize: double.infinity,
       backgroundColor: Colors.white,
       pageTransitionType: PageTransitionType.fade,
-      duration: 3000,
+      duration: 4300,
     );
   }
 }
