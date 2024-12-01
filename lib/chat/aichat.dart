@@ -1,23 +1,76 @@
-import 'package:doctor_doom/chat/chatprovider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-class ChatScreen extends ConsumerStatefulWidget {
+final chatProvider =
+    StateNotifierProvider<ChatNotifier, List<Map<String, String>>>(
+  (ref) => ChatNotifier(),
+);
+
+class ChatNotifier extends StateNotifier<List<Map<String, String>>> {
+  ChatNotifier() : super([]);
+
+  bool isLoading = false;
+
+  Future<void> sendMessage(String username, String message) async {
+    final messages = List<Map<String, String>>.from(state);
+
+    isLoading = true;
+    state = [
+      ...messages,
+      {'username': username, 'message': message}
+    ];
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://chat-l31s.onrender.com/detail'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'text': message}),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        dynamic botMessage = responseData['information'] ?? 'No response';
+
+        state = [
+          ...state,
+          {'username': 'Bot', 'message': botMessage}
+        ];
+      } else {
+        state = [
+          ...state,
+          {'username': 'Bot', 'message': 'Failed to fetch response.'}
+        ];
+      }
+    } catch (e) {
+      state = [
+        ...state,
+        {'username': 'Bot', 'message': 'Error: $e'}
+      ];
+    } finally {
+      isLoading = false;
+    }
+  }
+}
+
+class Aichat extends ConsumerStatefulWidget {
   final String username;
   final String channelname;
 
-  const ChatScreen({
+  const Aichat({
     Key? key,
     required this.username,
     required this.channelname,
   }) : super(key: key);
 
   @override
-  ConsumerState<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<Aichat> createState() => _AichatState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _AichatState extends ConsumerState<Aichat> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -31,7 +84,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _sendMessage() {
     final message = _messageController.text.trim();
     if (message.isNotEmpty) {
-      ref.read(messagesProvider.notifier).sendMessage(widget.username, message);
+      ref.read(chatProvider.notifier).sendMessage(widget.username, message);
       _messageController.clear();
 
       _scrollController.animateTo(
@@ -44,7 +97,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final messages = ref.watch(messagesProvider);
+    final messages = ref.watch(chatProvider);
+    final isLoading = ref.watch(chatProvider.notifier).isLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFF444444),
@@ -56,10 +110,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               height: MediaQuery.of(context).size.height * 0.15,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF333333),
-                    Color(0xFF1E1E1E),
-                  ],
+                  colors: [Color(0xFF333333), Color(0xFF1E1E1E)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -77,18 +128,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    Text(
-                      'User: ${widget.username}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
                   ],
                 ),
               ),
             ),
-          ), // Chat and Input Section
+          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -118,9 +162,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final message = messages[index];
-                          final username = message['username'] ?? 'Unknown';
-                          final messageText =
-                              message['message'] ?? 'No message';
+                          final username = message['username']!;
+                          final messageText = message['message']!;
                           final isUserMessage = username == widget.username;
 
                           return Align(
@@ -151,7 +194,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     : CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "~ ${username}",
+                                    "~ $username",
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
                                       color: Colors.black,
@@ -173,6 +216,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         },
                       ),
                     ),
+                    if (isLoading) ...[
+                      LoadingAnimationWidget.progressiveDots(
+                        color: const Color.fromARGB(255, 14, 14, 14),
+                        size: 50,
+                      ),
+                    ],
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Row(

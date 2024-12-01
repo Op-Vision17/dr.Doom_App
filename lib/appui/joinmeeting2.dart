@@ -47,7 +47,6 @@ class Joinmeeting2 extends ConsumerStatefulWidget {
 class _Joinmeeting2State extends ConsumerState<Joinmeeting2> {
   @override
   void dispose() {
-    // Stop loading animation when leaving the screen
     ref.read(loadingProvider.notifier).state = false;
     super.dispose();
   }
@@ -160,13 +159,13 @@ class _Joinmeeting2State extends ConsumerState<Joinmeeting2> {
                                 if (userName.isNotEmpty &&
                                     roomName.isNotEmpty) {
                                   ref.read(loadingProvider.notifier).state =
-                                      true; // Show loading
+                                      true;
 
                                   final tokenData =
                                       await fetchAgoraToken(roomName);
 
                                   ref.read(loadingProvider.notifier).state =
-                                      false; // Hide loading
+                                      false;
 
                                   if (tokenData != null) {
                                     Navigator.pushReplacement(
@@ -183,7 +182,10 @@ class _Joinmeeting2State extends ConsumerState<Joinmeeting2> {
                                           isMicMuted: isMicOn,
                                         ),
                                       ),
-                                    );
+                                    ).then((_) {
+                                      ref.read(loadingProvider.notifier).state =
+                                          false;
+                                    });
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(

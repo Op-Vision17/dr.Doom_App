@@ -108,7 +108,7 @@ class MemberScreen extends StatelessWidget {
                           leading: CircleAvatar(
                             backgroundColor: const Color(0xFFFFA500),
                             child: Text(
-                              entry.key.toString(),
+                              entry.value![0].toUpperCase(),
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
