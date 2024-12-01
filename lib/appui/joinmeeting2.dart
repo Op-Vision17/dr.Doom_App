@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 // State Providers
 final roomNameProvider = StateProvider<String>((ref) => '');
 final userNameProvider = StateProvider<String>((ref) => '');
 final isMicOnProvider = StateProvider<bool>((ref) => true);
 final isVideoOnProvider = StateProvider<bool>((ref) => true);
+final loadingProvider = StateProvider<bool>((ref) => false);
 
 // Predefined function to fetch token
 Future<Map<String, dynamic>?> fetchAgoraToken(String roomName) async {
@@ -44,6 +46,7 @@ class Joinmeeting2 extends ConsumerWidget {
     final userName = ref.watch(userNameProvider);
     final isMicOn = ref.watch(isMicOnProvider);
     final isVideoOn = ref.watch(isVideoOnProvider);
+    final isLoading = ref.watch(loadingProvider);
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 233, 201, 152),
@@ -139,38 +142,51 @@ class Joinmeeting2 extends ConsumerWidget {
 
                       // Join Meeting Button
                       ElevatedButton(
-                        onPressed: () async {
-                          if (userName.isNotEmpty && roomName.isNotEmpty) {
-                            final tokenData = await fetchAgoraToken(roomName);
-                            if (tokenData != null) {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AgoraScreen(
-                                    appId: '2f3131394cc6417b91aa93cfde567a37',
-                                    channelName: roomName,
-                                    token: tokenData['token'],
-                                    uid: tokenData['uid'],
-                                    userName: userName,
-                                    isCameraMuted: isVideoOn,
-                                    isMicMuted: isMicOn,
-                                  ),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text('Failed to fetch Agora token')),
-                              );
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Please fill all fields')),
-                            );
-                          }
-                        },
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                if (userName.isNotEmpty &&
+                                    roomName.isNotEmpty) {
+                                  ref.read(loadingProvider.notifier).state =
+                                      true; // Show loading
+
+                                  final tokenData =
+                                      await fetchAgoraToken(roomName);
+
+                                  ref.read(loadingProvider.notifier).state =
+                                      false; // Hide loading
+
+                                  if (tokenData != null) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AgoraScreen(
+                                          appId:
+                                              '2f3131394cc6417b91aa93cfde567a37',
+                                          channelName: roomName,
+                                          token: tokenData['token'],
+                                          uid: tokenData['uid'],
+                                          userName: userName,
+                                          isCameraMuted: isVideoOn,
+                                          isMicMuted: isMicOn,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Failed to fetch Agora token')),
+                                    );
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text('Please fill all fields')),
+                                  );
+                                }
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
                               const Color.fromARGB(255, 232, 167, 48), // Orange
@@ -179,14 +195,19 @@ class Joinmeeting2 extends ConsumerWidget {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                         ),
-                        child: Text(
-                          "Join",
-                          style: GoogleFonts.roboto(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
+                        child: isLoading
+                            ? LoadingAnimationWidget.fourRotatingDots(
+                                color: const Color.fromARGB(255, 240, 195, 69),
+                                size: 45,
+                              )
+                            : Text(
+                                "Join",
+                                style: GoogleFonts.roboto(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
                       ),
                     ],
                   ),

@@ -47,7 +47,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messages = ref.watch(messagesProvider);
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 233, 201, 152), // Light beige
+      backgroundColor: const Color(0xFF444444), // Dark grey background
       body: Stack(
         children: [
           // Gradient Header
@@ -97,7 +97,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               padding: const EdgeInsets.only(top: 100.0),
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2C), // Dark Grey container
+                  color: const Color.fromARGB(
+                      255, 233, 201, 152), // Light beige container
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(16.0),
                     topRight: Radius.circular(16.0),
