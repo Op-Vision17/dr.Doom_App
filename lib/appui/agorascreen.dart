@@ -1,5 +1,8 @@
+// import 'package:doctor_doom/recording/agorarecording.dart';
+import 'package:doctor_doom/appui/membersscreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:doctor_doom/agora/apiwork.dart';
 import 'package:doctor_doom/chat/chatprovider.dart';
@@ -35,16 +38,56 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
 
   bool isMicMuted = false;
   bool isCameraMuted = false;
+  bool isRecording = false;
 
   double _localVideoX = 10.0;
   double _localVideoY = 10.0;
+
+  // String? resourceId;
+  // String? sid;
+
+  // late AgoraRecording _recording;
 
   @override
   void initState() {
     super.initState();
     isMicMuted = widget.isMicMuted;
     isCameraMuted = widget.isCameraMuted;
-    initAgora();
+    // _recording = AgoraRecording();
+    _checkPermissions().then((granted) {
+      if (granted) {
+        initAgora();
+      } else {
+        _showPermissionError();
+      }
+    });
+  }
+
+  Future<bool> _checkPermissions() async {
+    final statuses = await [
+      Permission.camera,
+      Permission.microphone,
+    ].request();
+
+    return statuses[Permission.camera]!.isGranted &&
+        statuses[Permission.microphone]!.isGranted;
+  }
+
+  void _showPermissionError() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Permissions Required"),
+        content: Text(
+            "Please grant camera and microphone permissions to use this feature."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> initAgora() async {
@@ -74,6 +117,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
             localUid = uid;
           });
           createMember(widget.userName, widget.uid, widget.channelName);
+          // _acquireRecordingResource();
         },
         onUserJoined:
             (RtcConnection connection, int remoteUid, int elapsed) async {
@@ -91,6 +135,11 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
             remoteUsers.remove(remoteUid);
           });
         },
+        // onLeaveChannel: (RtcConnection connection, RtcStats stats) {
+        //   if (isRecording) {
+        //     _stopRecording();
+        //   }
+        // },
       ),
     );
 
@@ -102,6 +151,9 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
   void dispose() {
     _agoraEngine.leaveChannel();
     _agoraEngine.release();
+    // if (isRecording) {
+    //   _stopRecording();
+    // }
     super.dispose();
   }
 
@@ -130,6 +182,43 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
         false;
   }
 
+  // Future<void> _acquireRecordingResource() async {
+  //   try {
+  //     resourceId = await _recording.acquireResource(widget.channelName);
+  //     print('resource hogya $resourceId');
+  //     if (resourceId != null) {
+  //       setState(() {
+  //         isRecording = true;
+  //       });
+  //       _startRecording();
+  //     }
+  //   } catch (e) {
+  //     print("Error acquiring recording resource: $e");
+  //   }
+  // }
+
+  // Future<void> _startRecording() async {
+  //   if (resourceId != null) {
+  //     try {
+  //       sid = await _recording.startRecording(resourceId!, widget.channelName);
+  //       print('sid hogya $sid');
+  //     } catch (e) {
+  //       print("Error starting recording: $e");
+  //     }
+  //   }
+  // }
+
+  // Future<void> _stopRecording() async {
+  //   if (resourceId != null && sid != null) {
+  //     try {
+  //       await _recording.stopRecording(resourceId!, sid!, widget.channelName);
+  //       print("Recording stopped");
+  //     } catch (e) {
+  //       print("Error stopping recording: $e");
+  //     }
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -137,14 +226,12 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
 
     return WillPopScope(
       onWillPop: () async {
-        bool shouldLeave =
-            await _showExitConfirmationDialog(context); // Fixed method name
+        bool shouldLeave = await _showExitConfirmationDialog(context);
         return shouldLeave;
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor:
-              Color.fromARGB(255, 226, 166, 55), // Login screen's primary color
+          backgroundColor: Color.fromARGB(255, 226, 166, 55),
           title: Text(
             widget.channelName,
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
@@ -153,7 +240,6 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
         ),
         body: Stack(
           children: [
-            // Remote users video grid
             GridView.builder(
               padding: EdgeInsets.only(top: 20),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -167,8 +253,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                 int remoteUid = remoteUsers.keys.elementAt(index);
                 return Container(
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 237, 216,
-                        139), // Match the background color of login screen
+                    color: const Color.fromARGB(255, 237, 216, 139),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(
@@ -222,7 +307,6 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                 );
               },
             ),
-
             Positioned(
               bottom: _localVideoY,
               right: _localVideoX,
@@ -273,7 +357,6 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Mic Button
               GestureDetector(
                 onTap: () async {
                   setState(() {
@@ -286,7 +369,6 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                   isActive: !isMicMuted,
                 ),
               ),
-              // Camera Button
               GestureDetector(
                 onTap: () async {
                   setState(() {
@@ -299,7 +381,23 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                   isActive: !isCameraMuted,
                 ),
               ),
-              // Chat Button
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => MemberScreen(
+                              username: widget.userName,
+                              channelName: widget.channelName,
+                              remoteUsers: remoteUsers,
+                            )),
+                  );
+                },
+                child: _buildButton(
+                  icon: Icons.person_2_rounded,
+                  isActive: true,
+                ),
+              ),
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -316,7 +414,6 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                   isActive: true,
                 ),
               ),
-              // Exit Button
               GestureDetector(
                 onTap: () async {
                   bool shouldLeave = await _showExitConfirmationDialog(context);
