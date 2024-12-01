@@ -118,13 +118,21 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.channelName)),
+      appBar: AppBar(
+        title: Text(
+          widget.channelName,
+          style: const TextStyle(color: Color(0xFFFFA500)),
+        ),
+        backgroundColor: const Color(0xFF1E1E1E),
+        iconTheme: const IconThemeData(color: Color(0xFFFFA500)),
+      ),
+      backgroundColor: const Color(0xFF2C2C2C), // Dark Grey Background
       body: Stack(
         children: [
           // Remote users video grid
           GridView.builder(
-            padding: EdgeInsets.only(top: 20),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            padding: const EdgeInsets.only(top: 20),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
@@ -135,7 +143,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
               int remoteUid = remoteUsers.keys.elementAt(index);
               return Container(
                 decoration: BoxDecoration(
-                  color: Colors.black,
+                  color: const Color(0xFF1E1E1E), // Black for remote video
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -146,9 +154,9 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                         aspectRatio: 3 / 4,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey[900],
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(8)),
+                            color: const Color(0xFF333333), // Darker Grey
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(8)),
                           ),
                           child: remoteUsers[remoteUid] != null
                               ? AgoraVideoView(
@@ -159,7 +167,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                                         channelId: widget.channelName),
                                   ),
                                 )
-                              : Center(
+                              : const Center(
                                   child: Text(
                                     "No Video",
                                     style: TextStyle(color: Colors.white),
@@ -173,13 +181,14 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                       child: Container(
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.grey[800],
-                          borderRadius:
-                              BorderRadius.vertical(bottom: Radius.circular(8)),
+                          color: const Color(0xFF1E1E1E), // Match footer grey
+                          borderRadius: const BorderRadius.vertical(
+                              bottom: Radius.circular(8)),
                         ),
                         child: Text(
                           remoteUsers[remoteUid] ?? "Unknown User",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 16),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -204,12 +213,12 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                   ? Container(
                       width: screenWidth * 0.4,
                       height: screenHeight * 0.3,
-                      color: Colors.black,
+                      color: const Color(0xFF1E1E1E), // Black for muted camera
                       child: Center(
                         child: Text(
                           widget.userName,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -238,94 +247,23 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Mic Button
-            GestureDetector(
-              onTap: () async {
-                setState(() {
-                  isMicMuted = !isMicMuted;
-                });
-                await _agoraEngine.muteLocalAudioStream(isMicMuted);
-              },
-              child: _buildButton(
-                icon: isMicMuted ? Icons.mic_off : Icons.mic,
-                isActive: !isMicMuted,
-              ),
-            ),
-            // Camera Button
-            GestureDetector(
-              onTap: () async {
-                setState(() {
-                  isCameraMuted = !isCameraMuted;
-                });
-                await _agoraEngine.muteLocalVideoStream(isCameraMuted);
-              },
-              child: _buildButton(
-                icon: isCameraMuted ? Icons.videocam_off : Icons.videocam,
-                isActive: !isCameraMuted,
-              ),
-            ),
-            // Chat Button
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                            username: widget.userName,
-                            channelname: widget.channelName,
-                          )),
-                );
-              },
-              child: _buildButton(
-                icon: Icons.chat,
-                isActive: true,
-              ),
-            ),
-            // Leave Meeting Button
-            GestureDetector(
-              onTap: () async {
-                // Clear chat messages before leaving
-                _clearChatMessages();
-
-                await _agoraEngine.leaveChannel();
-                await _agoraEngine.release();
-                Navigator.pop(context); // Exit the meeting
-              },
-              child: _buildButton(
-                icon: Icons.exit_to_app,
-                isActive: true,
-                color: Colors.red,
-              ),
-            ),
+            _buildButton(icon: isMicMuted ? Icons.mic_off : Icons.mic),
+            _buildButton(
+                icon: isCameraMuted ? Icons.videocam_off : Icons.videocam),
+            _buildButton(icon: Icons.chat),
+            _buildButton(icon: Icons.exit_to_app, color: Colors.red),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildButton({
-    required IconData icon,
-    required bool isActive,
-    Color color = Colors.white,
-  }) {
-    return Container(
-      width: 70,
-      height: 70,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isActive ? Colors.white : Colors.grey,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black45,
-            blurRadius: 5.0,
-          ),
-        ],
-      ),
-      child: Icon(
-        icon,
-        size: 35,
-        color: isActive ? Colors.black : Colors.white,
-      ),
+  Widget _buildButton(
+      {required IconData icon, Color color = const Color(0xFFFFA500)}) {
+    return CircleAvatar(
+      radius: 35,
+      backgroundColor: const Color(0xFF333333),
+      child: Icon(icon, color: color),
     );
   }
 }

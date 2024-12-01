@@ -9,9 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 final emailProvider = StateProvider<String>((ref) => "");
 final newPasswordProvider = StateProvider<String>((ref) => "");
 final passwordVisibilityProvider = StateProvider<bool>((ref) => true);
+final loadingProvider = StateProvider<bool>((ref) => false);
 
-class ResetPasswordScreen extends ConsumerWidget {
-  const ResetPasswordScreen({Key? key}) : super(key: key);
+class ResetPasswordScreen2 extends ConsumerWidget {
+  const ResetPasswordScreen2({Key? key}) : super(key: key);
 
   Future<void> resetPassword(BuildContext context, WidgetRef ref) async {
     final email = ref.read(emailProvider).trim();
@@ -78,89 +79,106 @@ class ResetPasswordScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(loadingProvider);
     final _obscurePassword = ref.watch(passwordVisibilityProvider);
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      backgroundColor:
+          const Color.fromARGB(255, 233, 201, 152), // Light background color
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("assets/loginbackground.jpg"),
-                fit: BoxFit.cover,
+          // Gradient Background with Orange and Grey (without logo)
+          ClipPath(
+            clipper: WaveClipper(),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.45,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF333333), // Dark Grey
+                    Color(0xFF1E1E1E), // Black
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
             ),
           ),
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 50.0),
-                child: Text(
-                  "Dr. Doom",
-                  style: GoogleFonts.kablammo(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 0, 0, 0),
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.5),
-                        offset: const Offset(2, 2),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const Spacer(flex: 2),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          // Centered Form Container
+          Align(
+            alignment: Alignment.center,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(200, 255, 255, 255),
+                    color: const Color(0xFF2C2C2C), // Dark Grey container
                     borderRadius: BorderRadius.circular(16.0),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(24.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'RESET PASSWORD',
+                      Text(
+                        "RESET PASSWORD",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 0, 0, 0),
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: const Color.fromARGB(
+                              255, 234, 157, 14), // Shiny Orange
                         ),
                       ),
                       const SizedBox(height: 20),
+                      // Email Field
                       TextField(
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
                           labelText: "Email",
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(color: Colors.white),
+                          border: const OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.email,
+                              color: const Color.fromARGB(
+                                  255, 235, 164, 30)), // Orange Icon
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color(0xFFFFA500), width: 2.0),
+                          ),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         onChanged: (value) =>
                             ref.read(emailProvider.notifier).state = value,
                       ),
                       const SizedBox(height: 20),
+                      // New Password Field
                       TextField(
+                        style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: "New Password",
+                          labelStyle: const TextStyle(color: Colors.white),
                           border: const OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock,
+                              color: const Color.fromARGB(
+                                  255, 235, 164, 30)), // Orange Icon
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color(0xFFFFA500), width: 2.0),
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
                             ),
+                            color: Color(0xFFFFA500),
                             onPressed: () {
                               ref
                                   .read(passwordVisibilityProvider.notifier)
@@ -174,13 +192,14 @@ class ResetPasswordScreen extends ConsumerWidget {
                             .state = value,
                       ),
                       const SizedBox(height: 20),
+                      // Reset Button
                       ElevatedButton(
                         onPressed: isLoading
                             ? null
                             : () => resetPassword(context, ref),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromRGBO(202, 239, 184, 1),
+                          backgroundColor: const Color.fromARGB(
+                              255, 232, 167, 48), // Shiny Orange
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
@@ -188,8 +207,7 @@ class ResetPasswordScreen extends ConsumerWidget {
                         ),
                         child: isLoading
                             ? const CircularProgressIndicator(
-                                color: Colors.black,
-                              )
+                                color: Colors.black)
                             : const Text(
                                 "Reset",
                                 style: TextStyle(
@@ -201,11 +219,29 @@ class ResetPasswordScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const Spacer(flex: 3),
-            ],
+            ),
           ),
         ],
       ),
     );
+  }
+}
+
+// Custom Clipper for Gradient Wave
+class WaveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height - 50);
+    path.quadraticBezierTo(
+        size.width / 2, size.height, size.width, size.height - 50);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    return false;
   }
 }
