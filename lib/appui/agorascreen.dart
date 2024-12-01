@@ -57,7 +57,6 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
     super.initState();
     isMicMuted = widget.isMicMuted;
     isCameraMuted = widget.isCameraMuted;
-    // _recording = AgoraRecording();
     _checkPermissions().then((granted) {
       if (granted) {
         initAgora();
@@ -275,6 +274,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
               itemCount: remoteUsers.keys.length,
               itemBuilder: (context, index) {
                 int remoteUid = remoteUsers.keys.elementAt(index);
+                print('Displaying video for remoteUid: $remoteUid');
                 return Container(
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 237, 216, 139),
@@ -284,21 +284,34 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                     children: [
                       Expanded(
                         flex: 3,
-                        child: AspectRatio(
-                          aspectRatio: 3 / 4,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            top: 10,
+                            right: 10,
+                            left: 10, // Added padding around the video
+                          ),
                           child: Container(
                             decoration: BoxDecoration(
                               color: const Color.fromARGB(255, 225, 217, 147),
                               borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(10)),
+                                top: Radius.circular(10),
+                              ),
                             ),
                             child: remoteUsers[remoteUid] != null
-                                ? AgoraVideoView(
-                                    controller: VideoViewController.remote(
-                                      rtcEngine: _agoraEngine,
-                                      canvas: VideoCanvas(uid: remoteUid),
-                                      connection: RtcConnection(
-                                          channelId: widget.channelName),
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(10)),
+                                    child: AspectRatio(
+                                      aspectRatio: 3 /
+                                          4, // Maintain aspect ratio of the video
+                                      child: AgoraVideoView(
+                                        controller: VideoViewController.remote(
+                                          rtcEngine: _agoraEngine,
+                                          canvas: VideoCanvas(uid: remoteUid),
+                                          connection: RtcConnection(
+                                              channelId: widget.channelName),
+                                        ),
+                                      ),
                                     ),
                                   )
                                 : Center(
