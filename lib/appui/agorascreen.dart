@@ -1,5 +1,6 @@
 // import 'package:doctor_doom/recording/agorarecording.dart';
 import 'package:doctor_doom/appui/membersscreen.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -39,6 +40,9 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
   bool isMicMuted = false;
   bool isCameraMuted = false;
   bool isRecording = false;
+  bool showEmojiPicker = false;
+  String? selectedEmoji;
+  String? emojiWithUserName;
 
   double _localVideoX = 10.0;
   double _localVideoY = 10.0;
@@ -180,6 +184,26 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
           ),
         ) ??
         false;
+  }
+
+  void _toggleEmojiPicker() {
+    setState(() {
+      showEmojiPicker = !showEmojiPicker;
+    });
+    print("Emoji picker dabaya: $showEmojiPicker");
+  }
+
+  void _onEmojiSelected(Emoji emoji) {
+    setState(() {
+      selectedEmoji = emoji.emoji;
+      emojiWithUserName = "${widget.userName} $selectedEmoji";
+    });
+
+    Future.delayed(Duration(seconds: 5), () {
+      setState(() {
+        emojiWithUserName = null;
+      });
+    });
   }
 
   // Future<void> _acquireRecordingResource() async {
@@ -350,6 +374,39 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                       ),
               ),
             ),
+            if (emojiWithUserName != null)
+              Positioned(
+                top: 20,
+                right: 20,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 237, 216, 139),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    emojiWithUserName!,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            if (showEmojiPicker)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  child: EmojiPicker(
+                    onEmojiSelected: (category, emoji) {
+                      _onEmojiSelected(emoji);
+                    },
+                  ),
+                ),
+              ),
           ],
         ),
         bottomNavigationBar: Padding(
@@ -395,6 +452,16 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                 },
                 child: _buildButton(
                   icon: Icons.person_2_rounded,
+                  isActive: true,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  print("Emoji button dabaya");
+                  _toggleEmojiPicker();
+                },
+                child: _buildButton(
+                  icon: Icons.emoji_emotions,
                   isActive: true,
                 ),
               ),
