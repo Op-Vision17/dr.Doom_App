@@ -37,11 +37,23 @@ Future<Map<String, dynamic>?> fetchAgoraToken(String roomName) async {
   }
 }
 
-class Joinmeeting2 extends ConsumerWidget {
+class Joinmeeting2 extends ConsumerStatefulWidget {
   const Joinmeeting2({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  _Joinmeeting2State createState() => _Joinmeeting2State();
+}
+
+class _Joinmeeting2State extends ConsumerState<Joinmeeting2> {
+  @override
+  void dispose() {
+    // Stop loading animation when leaving the screen
+    ref.read(loadingProvider.notifier).state = false;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final roomName = ref.watch(roomNameProvider);
     final userName = ref.watch(userNameProvider);
     final isMicOn = ref.watch(isMicOnProvider);
