@@ -1,8 +1,10 @@
 // import 'package:doctor_doom/recording/agorarecording.dart';
 import 'package:doctor_doom/appui/membersscreen.dart';
+import 'package:doctor_doom/chat/aichat.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:doctor_doom/agora/apiwork.dart';
@@ -43,6 +45,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
   bool showEmojiPicker = false;
   String? selectedEmoji;
   String? emojiWithUserName;
+  List<String> emojiMessages = [];
 
   double _localVideoX = 10.0;
   double _localVideoY = 10.0;
@@ -195,12 +198,13 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
   void _onEmojiSelected(Emoji emoji) {
     setState(() {
       selectedEmoji = emoji.emoji;
-      emojiWithUserName = "${widget.userName} $selectedEmoji";
+
+      emojiMessages.add("${widget.userName} $selectedEmoji");
     });
 
     Future.delayed(Duration(seconds: 5), () {
       setState(() {
-        emojiWithUserName = null;
+        emojiMessages.removeAt(0);
       });
     });
   }
@@ -254,12 +258,49 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Color.fromARGB(255, 226, 166, 55),
+          backgroundColor: const Color.fromARGB(255, 226, 166, 55),
           title: Text(
-            widget.channelName,
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            "Meeting:${widget.channelName}",
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          centerTitle: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Aichat(
+                        username: widget.userName,
+                        channelname: widget.channelName,
+                      ),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 255, 223, 186),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: Text(
+                  "DOOM's AI",
+                  style: GoogleFonts.rampartOne(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         body: Stack(
           children: [
@@ -387,9 +428,9 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                       ),
               ),
             ),
-            if (emojiWithUserName != null)
+            for (int i = 0; i < emojiMessages.length; i++)
               Positioned(
-                top: 20,
+                top: 20 + (i * 40),
                 right: 20,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -398,7 +439,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    emojiWithUserName!,
+                    emojiMessages[i],
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
