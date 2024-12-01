@@ -188,6 +188,10 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
         false;
   }
 
+  Future<void> _switchCamera() async {
+    await _agoraEngine.switchCamera();
+  }
+
   void _toggleEmojiPicker() {
     setState(() {
       showEmojiPicker = !showEmojiPicker;
@@ -461,6 +465,19 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                   ),
                 ),
               ),
+            Positioned(
+              bottom: 15.0,
+              right: screenWidth * 0.4 - 138,
+              child: GestureDetector(
+                onTap: () {
+                  _agoraEngine.switchCamera();
+                },
+                child: _buildButton(
+                  icon: Icons.cameraswitch_outlined,
+                  isActive: false,
+                ),
+              ),
+            ),
           ],
         ),
         bottomNavigationBar: Padding(
