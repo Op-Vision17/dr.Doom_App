@@ -54,6 +54,10 @@ class ChatNotifier extends StateNotifier<List<Map<String, String>>> {
       isLoading = false;
     }
   }
+
+  void deleteAllMessages() {
+    state = [];
+  }
 }
 
 class Aichat extends ConsumerStatefulWidget {

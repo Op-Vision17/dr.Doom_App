@@ -167,6 +167,10 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
     ref.read(messagesProvider.notifier).removeAllMessages();
   }
 
+  void _clearaimessages() {
+    ref.read(chatProvider.notifier).deleteAllMessages();
+  }
+
   Future<bool> _showExitConfirmationDialog(BuildContext context) async {
     return await showDialog<bool>(
           context: context,
@@ -557,6 +561,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                   bool shouldLeave = await _showExitConfirmationDialog(context);
                   if (shouldLeave) {
                     _clearChatMessages();
+                    _clearaimessages();
                     Navigator.pop(context);
                   }
                 },
