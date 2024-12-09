@@ -15,7 +15,7 @@ final loadingProvider = StateProvider<bool>((ref) => false);
 
 // Predefined function to fetch token
 Future<Map<String, dynamic>?> fetchAgoraToken(String roomName) async {
-  const String apiUrl = 'https://agora-8ojc.onrender.com/get_token/';
+  const String apiUrl = 'https://agora.naitikk.tech/get_token/';
 
   try {
     final response = await http.get(

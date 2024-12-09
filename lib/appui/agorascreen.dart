@@ -67,6 +67,12 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
         _showPermissionError();
       }
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _localVideoX = MediaQuery.of(context).size.width - 180;
+        _localVideoY = MediaQuery.of(context).size.height - 430;
+      });
+    });
   }
 
   Future<bool> _checkPermissions() async {
@@ -337,7 +343,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                           padding: EdgeInsets.only(
                             top: 10,
                             right: 10,
-                            left: 10, // Added padding around the video
+                            left: 10,
                           ),
                           child: Container(
                             decoration: BoxDecoration(
@@ -351,8 +357,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                                     borderRadius: BorderRadius.vertical(
                                         top: Radius.circular(10)),
                                     child: AspectRatio(
-                                      aspectRatio: 3 /
-                                          4, // Maintain aspect ratio of the video
+                                      aspectRatio: 3 / 4,
                                       child: AgoraVideoView(
                                         controller: VideoViewController.remote(
                                           rtcEngine: _agoraEngine,
@@ -394,13 +399,15 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
               },
             ),
             Positioned(
-              bottom: _localVideoY,
-              right: _localVideoX,
+              top: _localVideoY,
+              left: _localVideoX,
               child: GestureDetector(
                 onPanUpdate: (details) {
                   setState(() {
-                    _localVideoX = details.localPosition.dx;
-                    _localVideoY = details.localPosition.dy;
+                    _localVideoX = (_localVideoX + details.delta.dx)
+                        .clamp(0.0, MediaQuery.of(context).size.width - 150);
+                    _localVideoY = (_localVideoY + details.delta.dy)
+                        .clamp(0.0, MediaQuery.of(context).size.height - 250);
                   });
                 },
                 child: isCameraMuted

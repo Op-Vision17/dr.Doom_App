@@ -1,5 +1,3 @@
-import 'package:doctor_doom/appui/Schedule.dart';
-import 'package:doctor_doom/appui/joinmeeting2.dart';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,7 +42,8 @@ class ProfilePage extends ConsumerWidget {
 
   // Method to pick an image and save it to Hive
   Future<void> _pickAndSaveProfilePicture(BuildContext context) async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       final String imagePath = pickedFile.path;
@@ -54,7 +53,8 @@ class ProfilePage extends ConsumerWidget {
       await box.put('profile_picture', imagePath);
 
       // Refresh the UI after saving
-       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) =>  ProfilePage()));
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => ProfilePage()));
     }
   }
 
@@ -91,7 +91,8 @@ class ProfilePage extends ConsumerWidget {
                         // Placeholder CircleAvatar with a neutral background when waiting for data
                         return CircleAvatar(
                           radius: 90,
-                          backgroundColor: Colors.grey[300], // Placeholder color
+                          backgroundColor:
+                              Colors.grey[300], // Placeholder color
                         );
                       }
 
@@ -106,7 +107,8 @@ class ProfilePage extends ConsumerWidget {
                       // Default CircleAvatar with no image if none is found
                       return CircleAvatar(
                         radius: 90,
-                        backgroundColor: Colors.grey[300], // Placeholder color when no image is available
+                        backgroundColor: Colors.grey[
+                            300], // Placeholder color when no image is available
                       );
                     },
                   ),
@@ -114,11 +116,12 @@ class ProfilePage extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           // Profile Content (from the second code)
           SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 280.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 280.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -164,14 +167,16 @@ class ProfilePage extends ConsumerWidget {
                                       color: Colors.orangeAccent,
                                     ),
                                     const SizedBox(width: 10),
-                                    Flexible( // Ensures that the text can be wrapped or truncated
+                                    Flexible(
+                                      // Ensures that the text can be wrapped or truncated
                                       child: Text(
                                         profile.email,
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,
                                         ),
-                                        overflow: TextOverflow.ellipsis, // Adds "..." when the text overflows
+                                        overflow: TextOverflow
+                                            .ellipsis, // Adds "..." when the text overflows
                                       ),
                                     ),
                                   ],
@@ -196,18 +201,20 @@ class ProfilePage extends ConsumerWidget {
                                   ],
                                 ),
                                 const SizedBox(height: 20),
-                                  // Change Profile Picture Button
+                                // Change Profile Picture Button
                                 ElevatedButton(
                                   onPressed: () {
                                     // Trigger the profile picture picker
                                     _pickAndSaveProfilePicture(context);
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color.fromARGB(255, 232, 167, 48),
+                                    backgroundColor:
+                                        const Color.fromARGB(255, 232, 167, 48),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8.0),
                                     ),
-                                    padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 46.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16.0, horizontal: 46.0),
                                   ),
                                   child: Text(
                                     "Change Profile Picture",
@@ -218,31 +225,37 @@ class ProfilePage extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
-                                
 
                                 const SizedBox(height: 20),
-                                 // Logout Button
+                                // Logout Button
                                 ElevatedButton(
-  onPressed: () {
-    _logout(context); // Call your logout logic here
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: const Color.fromARGB(255, 232, 167, 48), // Same color as the "Change Profile Picture" button
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8.0), // Matching border radius
-    ),
-    padding: const EdgeInsets.symmetric(vertical: 16.0 , horizontal: 109.0), // Same padding
-  ),
-  child: Text(
-    "Logout",
-    style: GoogleFonts.roboto(
-      fontSize: 18,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-  ),
-),
-                              
+                                  onPressed: () {
+                                    _logout(
+                                        context); // Call your logout logic here
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color.fromARGB(
+                                        255,
+                                        232,
+                                        167,
+                                        48), // Same color as the "Change Profile Picture" button
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          8.0), // Matching border radius
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16.0,
+                                        horizontal: 109.0), // Same padding
+                                  ),
+                                  child: Text(
+                                    "Logout",
+                                    style: GoogleFonts.roboto(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -269,8 +282,9 @@ class ProfilePage extends ConsumerWidget {
   void _logout(BuildContext context) {
     // Add your logout logic here
     // For example, clear user data from Hive and navigate to the login page
-  
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) =>  LoginScreen()));
+
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => LoginScreen()));
   }
 
   // Fetch the stored profile picture from Hive
@@ -288,8 +302,10 @@ class WaveClipper extends CustomClipper<Path> {
     final path = Path();
     path.lineTo(0.0, 0.0);
     path.lineTo(0.0, size.height - 30);
-    path.quadraticBezierTo(size.width / 4, size.height, size.width / 2, size.height - 30);
-    path.quadraticBezierTo(size.width * 3 / 4, size.height - 60, size.width, size.height - 30);
+    path.quadraticBezierTo(
+        size.width / 4, size.height, size.width / 2, size.height - 30);
+    path.quadraticBezierTo(
+        size.width * 3 / 4, size.height - 60, size.width, size.height - 30);
     path.lineTo(size.width, 0.0);
     path.close();
     return path;

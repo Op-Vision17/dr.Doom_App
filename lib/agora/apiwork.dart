@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 Future<String?> leaveMeeting(String name, int uid, String roomName) async {
-  const String apiUrl = 'https://agora-8ojc.onrender.com/delete_member/';
+  const String apiUrl = 'https://agora.naitikk.tech/delete_member/';
 
   try {
     final response = await http.post(
@@ -28,7 +28,7 @@ Future<String?> leaveMeeting(String name, int uid, String roomName) async {
 }
 
 Future<Map<String, dynamic>?> fetchAgoraToken(String roomName) async {
-  const String apiUrl = 'https://agora-8ojc.onrender.com/get_token/';
+  const String apiUrl = 'https://agora.naitikk.tech/get_token/';
 
   try {
     final response = await http.get(
@@ -53,7 +53,7 @@ Future<Map<String, dynamic>?> fetchAgoraToken(String roomName) async {
 }
 
 Future<bool> createMember(String name, int uid, String roomName) async {
-  const String apiUrl = 'https://agora-8ojc.onrender.com/create_member/';
+  const String apiUrl = 'https://agora.naitikk.tech/create_member/';
 
   try {
     final response = await http.post(
@@ -81,7 +81,7 @@ Future<bool> createMember(String name, int uid, String roomName) async {
 
 Future<String?> fetchMemberDetails(int uid, String roomName) async {
   final url = Uri.parse(
-      'https://agora-8ojc.onrender.com/get_member/?UID=$uid&room_name=$roomName');
+      'https://agora.naitikk.tech/get_member/?UID=$uid&room_name=$roomName');
 
   try {
     final response = await http.get(url);

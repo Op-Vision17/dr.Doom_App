@@ -88,7 +88,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ),
             ),
-          ), // Chat and Input Section
+          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
