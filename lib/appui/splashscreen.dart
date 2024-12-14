@@ -28,9 +28,9 @@ class Splashscreen extends StatelessWidget {
                 ),
               ),
               Image.asset(
-                'assets/doom_logo.png',
+                'assets/dbg.png',
                 fit: BoxFit.contain,
-                height: constraints.maxHeight * 0.3,
+                height: constraints.maxHeight * 0.5,
               ),
             ],
           );
@@ -55,7 +55,7 @@ class Splashscreen extends StatelessWidget {
       splashIconSize: double.infinity,
       backgroundColor: Colors.white,
       pageTransitionType: PageTransitionType.fade,
-      duration: 4300,
+      duration: 4200,
     );
   }
 }

@@ -125,6 +125,7 @@ class VerifyOtp extends ConsumerWidget {
                       PinCodeTextField(
                         appContext: context,
                         length: 6,
+                        textStyle: TextStyle(color: Colors.white),
                         keyboardType: TextInputType.number,
                         onChanged: (value) {
                           ref.read(otpProvider.notifier).state = value;
@@ -135,7 +136,7 @@ class VerifyOtp extends ConsumerWidget {
                           fieldHeight: 50,
                           fieldWidth: 40,
                           activeFillColor: Colors.white,
-                          inactiveFillColor: Colors.grey[200],
+                          inactiveFillColor: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 20),

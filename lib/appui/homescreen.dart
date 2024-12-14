@@ -1,22 +1,12 @@
 import 'package:doctor_doom/appui/Schedule.dart';
+import 'package:doctor_doom/appui/account.dart';
 import 'package:doctor_doom/appui/joinmeeting2.dart';
-import 'package:doctor_doom/appui/profile.dart';
-import 'package:doctor_doom/authentication/loginscreen.dart';
-import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
-
-  Future<void> logout(BuildContext context) async {
-    await clearToken();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (Route<dynamic> route) => false,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,40 +24,24 @@ class HomeScreen extends StatelessWidget {
           Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 20.0, bottom: 20),
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10.0, right: 10.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.person_2_rounded,
-                              color: Color.fromARGB(255, 240, 176, 58),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => ProfilePage()),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.logout_rounded,
-                              color: Color.fromARGB(255, 232, 156, 16),
-                            ),
-                            onPressed: () async {
-                              await logout(context);
-                            },
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
+                padding:
+                    const EdgeInsets.only(top: 25.0, bottom: 5.0, right: 10.0),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: const Icon(
+                      FontAwesomeIcons.solidUserCircle,
+                      color: Color.fromARGB(255, 232, 156, 16),
+                      size: 40,
+                    ),
+                    onPressed: () async {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AccountScreen()),
+                      );
+                    },
+                  ),
                 ),
               ),
               Text(
@@ -78,8 +52,7 @@ class HomeScreen extends StatelessWidget {
                   color: const Color.fromARGB(255, 210, 167, 89),
                   shadows: [
                     Shadow(
-                      color: const Color(0xFF808080)
-                          .withOpacity(0.5), // Gray shadow
+                      color: const Color(0xFF808080).withOpacity(0.5),
                       offset: const Offset(2, 2),
                       blurRadius: 4,
                     ),
