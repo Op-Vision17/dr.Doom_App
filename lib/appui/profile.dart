@@ -1,46 +1,16 @@
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:doctor_doom/services/user_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// Model
-class Profile {
-  final String name;
-  final String email;
-  final String phoneNumber;
-  final String? profilePicture;
-
-  Profile({
-    required this.name,
-    required this.email,
-    required this.phoneNumber,
-    this.profilePicture,
-  });
-}
-
-final profileProvider = FutureProvider<Profile>((ref) async {
-  final userStorage = UserStorage();
-  final userData = await userStorage.getUserData();
-
-  return Profile(
-    name: '${userData['first_name']} ${userData['last_name']}',
-    email: userData['email'] ?? '',
-    phoneNumber: userData['phone_number'] ?? '',
-    profilePicture: userData['profile_picture'],
-  );
-});
-
-class ProfilePage extends ConsumerWidget {
+class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
 
-  // Initialize the ImagePicker
   final ImagePicker _picker = ImagePicker();
 
-  // Method to pick an image and save it to Hive
   Future<void> _pickAndSaveProfilePicture(BuildContext context) async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -48,25 +18,36 @@ class ProfilePage extends ConsumerWidget {
     if (pickedFile != null) {
       final String imagePath = pickedFile.path;
 
-      // Store the picked image path in Hive
       final Box box = await Hive.openBox('profileBox');
       await box.put('profile_picture', imagePath);
 
-      // Refresh the UI after saving
       Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => ProfilePage()));
     }
   }
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(profileProvider);
+  // Method to fetch user details from SharedPreferences
+  Future<Map<String, String>> _getUserDetails() async {
+    final prefs = await SharedPreferences.getInstance();
+    final firstName = prefs.getString('firstName') ?? 'N/A';
+    final lastName = prefs.getString('lastName') ?? 'N/A';
+    final email = prefs.getString('email') ?? 'N/A';
+    final phoneNumber = prefs.getString('phoneNumber') ?? 'N/A';
 
+    return {
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'phoneNumber': phoneNumber,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 233, 201, 152),
       body: Stack(
         children: [
-          // Gradient Background with Black and Orange (from the first code)
           ClipPath(
             clipper: WaveClipper(),
             child: Container(
@@ -74,8 +55,8 @@ class ProfilePage extends ConsumerWidget {
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFF333333), // Dark Grey
-                    Color(0xFF1E1E1E), // Black
+                    Color(0xFF333333),
+                    Color(0xFF1E1E1E),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -88,27 +69,22 @@ class ProfilePage extends ConsumerWidget {
                     future: _getProfilePicture(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        // Placeholder CircleAvatar with a neutral background when waiting for data
                         return CircleAvatar(
                           radius: 90,
-                          backgroundColor:
-                              Colors.grey[300], // Placeholder color
+                          backgroundColor: Colors.grey[300],
                         );
                       }
 
                       if (snapshot.hasData) {
-                        // Display the profile picture if available
                         return CircleAvatar(
                           radius: 90,
                           backgroundImage: FileImage(File(snapshot.data!)),
                         );
                       }
 
-                      // Default CircleAvatar with no image if none is found
                       return CircleAvatar(
                         radius: 90,
-                        backgroundColor: Colors.grey[
-                            300], // Placeholder color when no image is available
+                        backgroundColor: Colors.grey[300],
                       );
                     },
                   ),
@@ -116,8 +92,6 @@ class ProfilePage extends ConsumerWidget {
               ),
             ),
           ),
-
-          // Profile Content (from the second code)
           SingleChildScrollView(
             child: Padding(
               padding:
@@ -126,147 +100,130 @@ class ProfilePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 60),
-                  profileAsync.when(
-                    data: (profile) {
-                      return Column(
-                        children: [
-                          // Profile Info (using first code style)
-                          Container(
-                            padding: const EdgeInsets.all(12.0),
-                            margin: const EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF2C2C2C), // Dark Grey container
-                              borderRadius: BorderRadius.circular(16.0),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  profile.name,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                // Email Data with Icon
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.email,
-                                      color: Colors.orangeAccent,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Flexible(
-                                      // Ensures that the text can be wrapped or truncated
-                                      child: Text(
-                                        profile.email,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                        ),
-                                        overflow: TextOverflow
-                                            .ellipsis, // Adds "..." when the text overflows
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 15),
-                                // Phone Number Data with Icon
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.phone,
-                                      color: Colors.orangeAccent,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      profile.phoneNumber,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                // Change Profile Picture Button
-                                ElevatedButton(
-                                  onPressed: () {
-                                    // Trigger the profile picture picker
-                                    _pickAndSaveProfilePicture(context);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        const Color.fromARGB(255, 232, 167, 48),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8.0),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16.0, horizontal: 46.0),
-                                  ),
-                                  child: Text(
-                                    "Change Profile Picture",
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
+                  FutureBuilder<Map<String, String>>(
+                    future: _getUserDetails(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      }
 
-                                const SizedBox(height: 20),
-                                // Logout Button
-                                ElevatedButton(
-                                  onPressed: () {
-                                    _logout(
-                                        context); // Call your logout logic here
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color.fromARGB(
-                                        255,
-                                        232,
-                                        167,
-                                        48), // Same color as the "Change Profile Picture" button
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          8.0), // Matching border radius
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16.0,
-                                        horizontal: 109.0), // Same padding
+                      if (snapshot.hasData) {
+                        final userDetails = snapshot.data!;
+                        return Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12.0),
+                              margin: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF2C2C2C),
+                                borderRadius: BorderRadius.circular(16.0),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
                                   ),
-                                  child: Text(
-                                    "Logout",
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${userDetails['firstName']} ${userDetails['lastName']}',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.email,
+                                          color: Colors.orangeAccent),
+                                      const SizedBox(width: 10),
+                                      Flexible(
+                                        child: Text(
+                                          userDetails['email']!,
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 15),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.phone,
+                                          color: Colors.orangeAccent),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        userDetails['phoneNumber']!,
+                                        style: const TextStyle(
+                                            color: Colors.white, fontSize: 20),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      _pickAndSaveProfilePicture(context);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 232, 167, 48),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16.0, horizontal: 46.0),
+                                    ),
+                                    child: Text(
+                                      "Change Profile Picture",
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      _logout(context);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 232, 167, 48),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16.0, horizontal: 109.0),
+                                    ),
+                                    child: Text(
+                                      "Logout",
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                    loading: () {
-                      return const Center(child: CircularProgressIndicator());
-                    },
-                    error: (error, stackTrace) {
-                      return Center(child: Text('Error: $error'));
+                          ],
+                        );
+                      }
+
+                      return const Text('Error loading user details');
                     },
                   ),
                 ],
@@ -278,16 +235,11 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
-  // Method to handle logout
   void _logout(BuildContext context) {
-    // Add your logout logic here
-    // For example, clear user data from Hive and navigate to the login page
-
     Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => LoginScreen()));
   }
 
-  // Fetch the stored profile picture from Hive
   Future<String?> _getProfilePicture() async {
     final Box box = await Hive.openBox('profileBox');
     final String? imagePath = box.get('profile_picture');
@@ -295,7 +247,6 @@ class ProfilePage extends ConsumerWidget {
   }
 }
 
-// Custom Clipper for Gradient Wave (from the first code)
 class WaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

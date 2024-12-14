@@ -1,9 +1,7 @@
 import 'dart:convert';
+import 'package:doctor_doom/authentication/loginverify.dart';
 import 'package:doctor_doom/authentication/resetpass.dart';
 import 'package:doctor_doom/authentication/signupscreen.dart';
-import 'package:doctor_doom/appui/homescreen.dart';
-import 'package:doctor_doom/authentication/tokenmanage.dart';
-import 'package:doctor_doom/services/user_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,7 +34,7 @@ class LoginScreen extends ConsumerWidget {
 
     ref.read(loadingProvider.notifier).state = true;
 
-    const String url = "https://login-signup-docdoom.onrender.com/login/";
+    const String url = "https://agora.naitikk.tech/login/";
     final body = {"email": email, "password": password};
 
     try {
@@ -46,44 +44,33 @@ class LoginScreen extends ConsumerWidget {
         body: jsonEncode(body),
       );
 
-      final data = jsonDecode(response.body);
-
       ref.read(loadingProvider.notifier).state = false;
 
-      if (response.statusCode == 200) {
-        final token = data['token'];
-        final user = data['user'];
-
-        await saveToken(token);
-
-        final userStorage = UserStorage();
-        await userStorage.saveUserData(user, token);
-
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final message = jsonDecode(response.body)["message"];
         ScaffoldMessenger.of(ref.context).showSnackBar(
-          const SnackBar(content: Text("Login Successful!")),
+          SnackBar(content: Text(message)),
         );
-
-        Navigator.pushReplacement(
+        Navigator.push(
           ref.context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } else if (response.statusCode == 400) {
-        final error =
-            data['non_field_errors']?.join(' ') ?? "Invalid credentials.";
-        ScaffoldMessenger.of(ref.context).showSnackBar(
-          SnackBar(content: Text(error)),
+          MaterialPageRoute(
+              builder: (context) => Loginverify(
+                    email: email,
+                  )),
         );
       } else {
+        final error = jsonDecode(response.body);
+        final errorMessage = error.values.map((e) => e.join(" ")).join("\n");
         ScaffoldMessenger.of(ref.context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  "An unexpected error occurred. Please try again later.")),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(ref.context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text("Error")),
       );
+    } finally {
+      ref.read(loadingProvider.notifier).state = false;
     }
   }
 
@@ -96,7 +83,6 @@ class LoginScreen extends ConsumerWidget {
       backgroundColor: const Color.fromARGB(255, 233, 201, 152),
       body: Stack(
         children: [
-          // Gradient Background with Orange and Grey
           ClipPath(
             clipper: WaveClipper(),
             child: Container(

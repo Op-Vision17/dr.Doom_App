@@ -38,7 +38,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
   late RtcEngine _agoraEngine;
   Map<int, String?> remoteUsers = {};
   late int localUid;
-
+  bool _isFullScreen = false;
   bool isMicMuted = false;
   bool isCameraMuted = false;
   bool isRecording = false;
@@ -399,26 +399,39 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
               },
             ),
             Positioned(
-              top: _localVideoY,
-              left: _localVideoX,
+              top: _isFullScreen ? 0 : _localVideoY,
+              left: _isFullScreen ? 0 : _localVideoX,
               child: GestureDetector(
                 onPanUpdate: (details) {
+                  if (!_isFullScreen) {
+                    setState(() {
+                      _localVideoX = (_localVideoX + details.delta.dx)
+                          .clamp(0.0, MediaQuery.of(context).size.width - 150);
+                      _localVideoY = (_localVideoY + details.delta.dy)
+                          .clamp(0.0, MediaQuery.of(context).size.height - 250);
+                    });
+                  }
+                },
+                onDoubleTap: () {
                   setState(() {
-                    _localVideoX = (_localVideoX + details.delta.dx)
-                        .clamp(0.0, MediaQuery.of(context).size.width - 150);
-                    _localVideoY = (_localVideoY + details.delta.dy)
-                        .clamp(0.0, MediaQuery.of(context).size.height - 250);
+                    _isFullScreen = !_isFullScreen;
+                    if (_isFullScreen) {
+                      _localVideoX = 0;
+                      _localVideoY = 0;
+                    }
                   });
                 },
-                child: isCameraMuted
-                    ? Container(
-                        width: screenWidth * 0.4,
-                        height: screenHeight * 0.3,
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 252, 247, 205),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Center(
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  width: _isFullScreen
+                      ? MediaQuery.of(context).size.width
+                      : screenWidth * 0.4,
+                  height: _isFullScreen
+                      ? MediaQuery.of(context).size.height
+                      : screenHeight * 0.3,
+                  color: const Color.fromARGB(255, 238, 238, 221),
+                  child: isCameraMuted
+                      ? Center(
                           child: Text(
                             widget.userName,
                             textAlign: TextAlign.center,
@@ -428,19 +441,14 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      )
-                    : Container(
-                        width: screenWidth * 0.4,
-                        height: screenHeight * 0.3,
-                        color: const Color.fromARGB(255, 238, 238, 221),
-                        child: AgoraVideoView(
+                        )
+                      : AgoraVideoView(
                           controller: VideoViewController(
                             rtcEngine: _agoraEngine,
                             canvas: VideoCanvas(uid: 0),
                           ),
                         ),
-                      ),
+                ),
               ),
             ),
             for (int i = 0; i < emojiMessages.length; i++)

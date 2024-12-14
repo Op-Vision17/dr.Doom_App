@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:doctor_doom/authentication/loginscreen.dart';
+import 'package:doctor_doom/authentication/verify.dart';
+import 'package:doctor_doom/services/user_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -79,7 +81,7 @@ class SignupScreen extends ConsumerWidget {
       return;
     }
 
-    const String url = "https://login-signup-docdoom.onrender.com/register/";
+    const String url = "https://agora.naitikk.tech/register/";
 
     final body = {
       "first_name": firstName,
@@ -101,9 +103,15 @@ class SignupScreen extends ConsumerWidget {
         ScaffoldMessenger.of(ref.context).showSnackBar(
           SnackBar(content: Text(message)),
         );
+
+        await saveUserDetails(firstName, lastName, email, phoneNumber);
+
         Navigator.push(
           ref.context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(
+              builder: (context) => VerifyOtp(
+                    email: email,
+                  )),
         );
       } else {
         final error = jsonDecode(response.body);
@@ -130,7 +138,6 @@ class SignupScreen extends ConsumerWidget {
       backgroundColor: const Color.fromARGB(255, 233, 201, 152),
       body: Stack(
         children: [
-          // Gradient Background with Orange and Grey
           ClipPath(
             clipper: WaveClipper(),
             child: Container(
