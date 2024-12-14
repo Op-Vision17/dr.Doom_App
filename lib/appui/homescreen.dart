@@ -23,12 +23,10 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                    "assets/homeui.png"), // Replace with your background image
+                image: AssetImage("assets/homeui.png"),
                 fit: BoxFit.cover,
               ),
             ),
