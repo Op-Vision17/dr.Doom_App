@@ -115,14 +115,14 @@ class SignupScreen extends ConsumerWidget {
         );
       } else {
         final error = jsonDecode(response.body);
-        final errorMessage = error.values.map((e) => e.join(" ")).join("\n");
+        final errorMessage = error["message"];
         ScaffoldMessenger.of(ref.context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(ref.context).showSnackBar(
-        SnackBar(content: Text("Error: $e.")),
+        SnackBar(content: Text("Error")),
       );
     } finally {
       ref.read(loadingProvider.notifier).state = false;

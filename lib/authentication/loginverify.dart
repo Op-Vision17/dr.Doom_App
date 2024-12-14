@@ -131,6 +131,7 @@ class Loginverify extends ConsumerWidget {
                       PinCodeTextField(
                         appContext: context,
                         length: 6,
+                        textStyle: TextStyle(color: Colors.white),
                         keyboardType: TextInputType.number,
                         onChanged: (value) {
                           ref.read(otpProvider.notifier).state = value;
