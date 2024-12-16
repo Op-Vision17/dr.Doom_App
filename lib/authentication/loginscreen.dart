@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:doctor_doom/authentication/loginverify.dart';
 import 'package:doctor_doom/authentication/resetpass.dart';
 import 'package:doctor_doom/authentication/signupscreen.dart';
+import 'package:doctor_doom/services/user_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -51,6 +52,8 @@ class LoginScreen extends ConsumerWidget {
         ScaffoldMessenger.of(ref.context).showSnackBar(
           SnackBar(content: Text(message)),
         );
+
+        await emailsave(email);
         Navigator.push(
           ref.context,
           MaterialPageRoute(

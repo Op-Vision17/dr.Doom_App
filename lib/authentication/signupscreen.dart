@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:doctor_doom/authentication/loginscreen.dart';
 import 'package:doctor_doom/authentication/verify.dart';
-import 'package:doctor_doom/services/user_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -87,7 +86,7 @@ class SignupScreen extends ConsumerWidget {
       "first_name": firstName,
       "last_name": lastName,
       "email": email,
-      "phone_number": phoneNumber,
+      "phone": phoneNumber,
       "password": password,
     };
 
@@ -103,8 +102,6 @@ class SignupScreen extends ConsumerWidget {
         ScaffoldMessenger.of(ref.context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-
-        await saveUserDetails(firstName, lastName, email, phoneNumber);
 
         Navigator.push(
           ref.context,
