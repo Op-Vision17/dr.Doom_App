@@ -44,12 +44,12 @@ class Loginverify extends ConsumerWidget {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        final message = responseData['message'] ?? "";
+        final message = responseData['refresh'] ?? "";
 
         await saveToken(message);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
+          const SnackBar(content: Text("OTP verified successfully!")),
         );
         Navigator.push(
           context,

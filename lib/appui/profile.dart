@@ -1,27 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class ProfilePage extends StatelessWidget {
-  ProfilePage({super.key});
+final emailProvider = FutureProvider<String>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('email') ?? 'N/A';
+});
 
-  Future<Map<String, String>> _getUserDetails() async {
-    final prefs = await SharedPreferences.getInstance();
-    final firstName = prefs.getString('firstName') ?? 'N/A';
-    final lastName = prefs.getString('lastName') ?? 'N/A';
-    final email = prefs.getString('email') ?? 'N/A';
-    final phoneNumber = prefs.getString('phoneNumber') ?? 'N/A';
+final userDetailsProvider = FutureProvider<Map<String, String>>((ref) async {
+  final email = await ref.watch(emailProvider.future);
+  print('email iska $email');
 
+  final response = await http.post(
+    Uri.parse('https://agora.naitikk.tech/profile/'),
+    body: {'email': email},
+  );
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body) as Map<String, dynamic>;
     return {
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
-      'phoneNumber': phoneNumber,
+      'First name': data['First name:'] ?? 'N/A',
+      'Last name': data['Last name'] ?? 'N/A',
+      'Email': data['email'] ?? 'N/A',
+      'Phone': data['Phone'] ?? 'N/A',
+      'DOB': data['DOB'] ?? 'N/A',
+      'Occupation': data['Occupation'] ?? 'N/A',
+      'Institution': data['Institution'] ?? 'N/A',
     };
+  } else {
+    throw Exception('Failed to fetch user details');
   }
+});
+
+class ProfilePage extends ConsumerWidget {
+  const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userDetailsAsync = ref.watch(userDetailsProvider);
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 233, 201, 152),
       appBar: AppBar(
@@ -34,43 +54,47 @@ class ProfilePage extends StatelessWidget {
         centerTitle: true,
         elevation: 2,
       ),
-      body: FutureBuilder<Map<String, String>>(
-        future: _getUserDetails(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasData) {
-            final userDetails = snapshot.data!;
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildCard(
-                    title: 'Name',
-                    content:
-                        '${userDetails['firstName']} ${userDetails['lastName']}',
-                    icon: Icons.person,
-                  ),
-                  _buildCard(
-                    title: 'Email',
-                    content: userDetails['email']!,
-                    icon: Icons.email,
-                  ),
-                  _buildCard(
-                    title: 'Phone Number',
-                    content: userDetails['phoneNumber']!,
-                    icon: Icons.phone,
-                  ),
-                ],
+      body: userDetailsAsync.when(
+        data: (userDetails) => Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ListView(
+            children: [
+              _buildCard(
+                title: 'Name',
+                content:
+                    '${userDetails['First name']} ${userDetails['Last name']}',
+                icon: Icons.person,
               ),
-            );
-          }
-
-          return const Center(child: Text('Error loading user details'));
-        },
+              _buildCard(
+                title: 'Email',
+                content: userDetails['Email']!,
+                icon: Icons.email,
+              ),
+              _buildCard(
+                title: 'Phone',
+                content: userDetails['Phone']!,
+                icon: Icons.phone,
+              ),
+              _buildCard(
+                title: 'DOB',
+                content: userDetails['DOB']!,
+                icon: Icons.calendar_today,
+              ),
+              _buildCard(
+                title: 'Occupation',
+                content: userDetails['Occupation']!,
+                icon: Icons.work,
+              ),
+              _buildCard(
+                title: 'Institution',
+                content: userDetails['Institution']!,
+                icon: Icons.school,
+              ),
+            ],
+          ),
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(child: Text('Error: $error')),
       ),
     );
   }
