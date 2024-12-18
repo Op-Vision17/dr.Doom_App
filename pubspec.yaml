@@ -51,6 +51,7 @@ dependencies:
   pin_code_fields: ^8.0.1
   shared_preferences: ^2.3.3
   uuid: ^4.5.1
+  wakelock_plus: ^1.2.8
   web_socket_channel: ^3.0.1
 
 dev_dependencies:

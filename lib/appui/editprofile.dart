@@ -1,20 +1,35 @@
+import 'package:doctor_doom/appui/widgets.dart';
+import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+final emailProvider = FutureProvider<String>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('email') ?? 'N/A';
+});
 
 final profileProvider = StateNotifierProvider<ProfileNotifier, Profile>((ref) {
   return ProfileNotifier();
 });
 
 class Profile {
-  String gender;
-  String age;
+  String name;
+  String email;
+  String phoneNumber;
+  String dateOfBirth;
+  String institution;
   String occupation;
 
   Profile({
-    this.gender = '',
-    this.age = '',
+    this.name = '',
+    this.email = '',
+    this.phoneNumber = '',
+    this.dateOfBirth = '',
+    this.institution = '',
     this.occupation = '',
   });
 }
@@ -22,37 +37,122 @@ class Profile {
 class ProfileNotifier extends StateNotifier<Profile> {
   ProfileNotifier() : super(Profile());
 
-  void updateGender(String value) {
-    state =
-        Profile(gender: value, age: state.age, occupation: state.occupation);
+  void updateDateOfBirth(String value) {
+    state = Profile(
+      name: state.name,
+      email: state.email,
+      phoneNumber: state.phoneNumber,
+      dateOfBirth: value,
+      institution: state.institution,
+      occupation: state.occupation,
+    );
   }
 
-  void updateAge(String value) {
-    state =
-        Profile(gender: state.gender, age: value, occupation: state.occupation);
+  void updateInstitution(String value) {
+    state = Profile(
+      name: state.name,
+      email: state.email,
+      phoneNumber: state.phoneNumber,
+      dateOfBirth: state.dateOfBirth,
+      institution: value,
+      occupation: state.occupation,
+    );
   }
 
   void updateOccupation(String value) {
-    state = Profile(gender: state.gender, age: state.age, occupation: value);
+    state = Profile(
+      name: state.name,
+      email: state.email,
+      phoneNumber: state.phoneNumber,
+      dateOfBirth: state.dateOfBirth,
+      institution: state.institution,
+      occupation: value,
+    );
+  }
+
+  Future<void> fetchProfileData(String email) async {
+    const url = 'https://agora.naitikk.tech/profile/';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        state = Profile(
+          name: '${data['first_name'] ?? ''} ${data['last_name'] ?? ''}',
+          email: data['email'] ?? '',
+          phoneNumber: data['phone'] ?? '',
+          dateOfBirth: data['dob'] ?? '',
+          institution: data['institution'] ?? '',
+          occupation: data['occupation'] ?? '',
+        );
+      } else {
+        print('Failed to fetch data: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching profile data');
+    }
+  }
+
+  Future<String?> _getAccessToken() async {
+    final authToken = getToken();
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://agora.naitikk.tech/token/refresh/'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'refresh': authToken}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        String access_token = data['access'];
+        submitData(access_token);
+      } else {
+        print('Failed to fetch access token: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching access token');
+    }
+    return null;
+  }
+
+  Future<void> submitData(String access) async {
+    const url = 'https://agora.naitikk.tech/update-info/';
+    try {
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $access',
+        },
+        body: json.encode({
+          'dob': state.dateOfBirth,
+          'institution': state.institution,
+          'occupation': state.occupation,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Data submitted successfully: ${response.body}');
+      } else {
+        print('Failed to submit data: ${response.body}');
+      }
+    } catch (e) {
+      print('Error submitting data');
+    }
   }
 }
 
-class Editprofile extends ConsumerWidget {
-  Editprofile({super.key});
+class EditProfile extends ConsumerWidget {
+  const EditProfile({super.key});
 
-  Future<Map<String, String>> _getUserDetails() async {
+  Future<String> _getEmail() async {
     final prefs = await SharedPreferences.getInstance();
-    final firstName = prefs.getString('firstName') ?? 'N/A';
-    final lastName = prefs.getString('lastName') ?? 'N/A';
-    final email = prefs.getString('email') ?? 'N/A';
-    final phoneNumber = prefs.getString('phoneNumber') ?? 'N/A';
-
-    return {
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
-      'phoneNumber': phoneNumber,
-    };
+    return prefs.getString('email') ?? '';
   }
 
   @override
@@ -63,58 +163,57 @@ class Editprofile extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 233, 201, 152),
       appBar: AppBar(
-        title: Text('Profile', style: GoogleFonts.poppins(fontSize: 24)),
+        title: Text('Edit Profile', style: GoogleFonts.poppins(fontSize: 24)),
         backgroundColor: const Color(0xFF2C2C2C),
         centerTitle: true,
         elevation: 0,
       ),
-      body: FutureBuilder<Map<String, String>>(
-        future: _getUserDetails(),
+      body: FutureBuilder<String>(
+        future: _getEmail(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasData) {
-            final userDetails = snapshot.data!;
+            final sharedEmail = snapshot.data!;
+
+            profileNotifier.fetchProfileData(sharedEmail);
+
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildCard(
+                    buildImmutableCard(
                       title: 'Name',
-                      content:
-                          '${userDetails['firstName']} ${userDetails['lastName']}',
+                      value: profile.name,
                       icon: Icons.person,
-                      isMutable: false,
                     ),
-                    _buildCard(
+                    buildImmutableCard(
                       title: 'Email',
-                      content: userDetails['email']!,
+                      value: profile.email,
                       icon: Icons.email,
-                      isMutable: false,
                     ),
-                    _buildCard(
+                    buildImmutableCard(
                       title: 'Phone Number',
-                      content: userDetails['phoneNumber']!,
+                      value: profile.phoneNumber,
                       icon: Icons.phone,
-                      isMutable: false,
                     ),
-                    _buildEditableCard(
-                      title: 'Gender',
-                      value: profile.gender,
-                      icon: Icons.person_outline,
-                      onChanged: profileNotifier.updateGender,
+                    buildEditableCard(
+                      title: 'Date of Birth [YYYY-MM-DD]',
+                      value: profile.dateOfBirth,
+                      icon: Icons.calendar_today,
+                      onChanged: profileNotifier.updateDateOfBirth,
                     ),
-                    _buildEditableCard(
-                      title: 'Age',
-                      value: profile.age,
-                      icon: Icons.cake,
-                      onChanged: profileNotifier.updateAge,
+                    buildEditableCard(
+                      title: 'Institution',
+                      value: profile.institution,
+                      icon: Icons.school,
+                      onChanged: profileNotifier.updateInstitution,
                     ),
-                    _buildEditableCard(
+                    buildEditableCard(
                       title: 'Occupation',
                       value: profile.occupation,
                       icon: Icons.work,
@@ -122,8 +221,8 @@ class Editprofile extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {
-                        // Submit logic can be added here
+                      onPressed: () async {
+                        await profileNotifier._getAccessToken();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Details submitted!')),
                         );
@@ -149,106 +248,8 @@ class Editprofile extends ConsumerWidget {
             );
           }
 
-          return const Center(child: Text('Error loading user details'));
+          return const Center(child: Text('Error loading email'));
         },
-      ),
-    );
-  }
-
-  Widget _buildCard({
-    required String title,
-    required String content,
-    required IconData icon,
-    required bool isMutable,
-  }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(icon, size: 32, color: Colors.orangeAccent),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    content,
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEditableCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Function(String) onChanged,
-  }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(icon, size: 32, color: Colors.orangeAccent),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    onSubmitted: onChanged,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 8.0,
-                        horizontal: 12.0,
-                      ),
-                      hintText: 'Enter $title',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

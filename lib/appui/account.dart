@@ -56,7 +56,7 @@ class AccountScreen extends StatelessWidget {
                 stylecontainer(
                   label: 'Edit Profile',
                   icon: FontAwesomeIcons.userEdit,
-                  navigationScreen: Editprofile(),
+                  navigationScreen: EditProfile(),
                 ),
               ],
             ),
