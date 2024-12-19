@@ -40,6 +40,8 @@ class ProfilePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.refresh(userDetailsProvider);
+
     final userDetailsAsync = ref.watch(userDetailsProvider);
 
     return Scaffold(

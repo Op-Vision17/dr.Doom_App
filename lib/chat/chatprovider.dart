@@ -2,16 +2,16 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-final websocketProvider = Provider<WebSocketChannel>((ref) {
+final websocketProvider =
+    Provider.family<WebSocketChannel, String>((ref, channelname) {
   return WebSocketChannel.connect(
-    Uri.parse('ws://agora-8ojc.onrender.com/ws/Chat/'),
+    Uri.parse('ws://agora.naitikk.tech:8000/ws/chat/$channelname/'),
   );
 });
 
-final messagesProvider =
-    StateNotifierProvider<MessagesNotifier, List<Map<String, dynamic>>>((ref) {
-  final channel = ref.watch(websocketProvider);
-
+final messagesProvider = StateNotifierProvider.family<MessagesNotifier,
+    List<Map<String, dynamic>>, String>((ref, channelname) {
+  final channel = ref.watch(websocketProvider(channelname));
   return MessagesNotifier(channel);
 });
 

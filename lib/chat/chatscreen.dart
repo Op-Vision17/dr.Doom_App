@@ -31,7 +31,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _sendMessage() {
     final message = _messageController.text.trim();
     if (message.isNotEmpty) {
-      ref.read(messagesProvider.notifier).sendMessage(widget.username, message);
+      ref
+          .read(messagesProvider(widget.channelname).notifier)
+          .sendMessage(widget.username, message);
       _messageController.clear();
 
       _scrollController.animateTo(
@@ -44,7 +46,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final messages = ref.watch(messagesProvider);
+    final messages = ref.watch(messagesProvider(widget.channelname));
 
     return Scaffold(
       backgroundColor: const Color(0xFF444444),
@@ -118,7 +120,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final message = messages[index];
-                          final username = message['username'] ?? 'Unknown';
+                          final username = message['username'] ?? 'DOOM';
                           final messageText =
                               message['message'] ?? 'No message';
                           final isUserMessage = username == widget.username;
@@ -151,7 +153,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     : CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "~ ${username}",
+                                    "${username}",
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
                                       color: Colors.black,

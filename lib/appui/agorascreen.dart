@@ -10,6 +10,7 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:doctor_doom/agora/apiwork.dart';
 import 'package:doctor_doom/chat/chatprovider.dart';
 import 'package:doctor_doom/chat/chatscreen.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class AgoraScreen extends ConsumerStatefulWidget {
   final String appId;
@@ -60,6 +61,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
     super.initState();
     isMicMuted = widget.isMicMuted;
     isCameraMuted = widget.isCameraMuted;
+    WakelockPlus.enable();
     _checkPermissions().then((granted) {
       if (granted) {
         initAgora();
@@ -163,14 +165,15 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
   void dispose() {
     _agoraEngine.leaveChannel();
     _agoraEngine.release();
+    WakelockPlus.disable();
     // if (isRecording) {
     //   _stopRecording();
     // }
     super.dispose();
   }
 
-  void _clearChatMessages() {
-    ref.read(messagesProvider.notifier).removeAllMessages();
+  void _clearChatMessages(String channelname) {
+    ref.read(messagesProvider(channelname).notifier).removeAllMessages();
   }
 
   void _clearaimessages() {
@@ -575,7 +578,7 @@ class _AgoraScreenState extends ConsumerState<AgoraScreen> {
                 onTap: () async {
                   bool shouldLeave = await _showExitConfirmationDialog(context);
                   if (shouldLeave) {
-                    _clearChatMessages();
+                    _clearChatMessages(widget.channelName);
                     _clearaimessages();
                     Navigator.pop(context);
                   }
