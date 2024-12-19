@@ -1,5 +1,6 @@
-import 'package:doctor_doom/appui/editprofile.dart';
 import 'package:doctor_doom/appui/profile.dart';
+import 'package:doctor_doom/appui/profileedit.dart';
+
 import 'package:doctor_doom/authentication/tokenmanage.dart';
 import 'package:doctor_doom/services/user_storage.dart';
 import 'package:flutter/material.dart';
@@ -56,7 +57,7 @@ class AccountScreen extends StatelessWidget {
                 stylecontainer(
                   label: 'Edit Profile',
                   icon: FontAwesomeIcons.userEdit,
-                  navigationScreen: EditProfile(),
+                  navigationScreen: UpdateProfilePage(),
                 ),
               ],
             ),
